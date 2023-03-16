@@ -77,14 +77,12 @@ def main(imagefile, convert_alpha=False, run_speed_test=False):
                     bRight = False
         if bUp:
             cursize[1] -= 2
-            if cursize[1] < 1:
-                cursize[1] = 1
+            cursize[1] = max(cursize[1], 1)
         if bDown:
             cursize[1] += 2
         if bLeft:
             cursize[0] -= 2
-            if cursize[0] < 1:
-                cursize[0] = 1
+            cursize[0] = max(cursize[0], 1)
         if bRight:
             cursize[0] += 2
     pg.quit()

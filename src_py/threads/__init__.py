@@ -44,11 +44,7 @@ def init(number_of_workers=0):
     """
     global _wq, _use_workers
 
-    if number_of_workers:
-        _use_workers = number_of_workers
-    else:
-        _use_workers = benchmark_workers()
-
+    _use_workers = number_of_workers or benchmark_workers()
     # if it is best to use zero workers, then use that.
     _wq = WorkerQueue(_use_workers)
 
@@ -89,16 +85,12 @@ def benchmark_workers(a_bench_func=None, the_data=None):
     else:
         doit = a_bench_func
 
-    if not the_data:
-        thedata = [pygame.Surface((155, 155), 0, 32) for x in range(10)]
-    else:
-        thedata = the_data
-
+    thedata = the_data or [pygame.Surface((155, 155), 0, 32) for x in range(10)]
     best = time.time() + 100000000
     best_number = 0
     # last_best = -1
 
-    for num_workers in range(0, MAX_WORKERS_TO_TEST):
+    for num_workers in range(MAX_WORKERS_TO_TEST):
         wq = WorkerQueue(num_workers)
         t1 = time.time()
         for _ in range(20):
@@ -136,9 +128,7 @@ class WorkerQueue:
         """
         self.pool = []
 
-        for _ in range(num_workers):
-            self.pool.append(Thread(target=self.threadloop))
-
+        self.pool.extend(Thread(target=self.threadloop) for _ in range(num_workers))
         for a_thread in self.pool:
             a_thread.setDaemon(True)
             a_thread.start()
@@ -215,15 +205,13 @@ def tmap(f, seq_args, num_workers=20, worker_queue=None, wait=True, stop_on_erro
 
     if worker_queue:
         wq = worker_queue
-    else:
-        # see if we have a global queue to work with.
-        if _wq:
-            wq = _wq
-        else:
-            if num_workers == 0:
-                return map(f, seq_args)
+    elif _wq:
+        wq = _wq
+    elif num_workers == 0:
+        return map(f, seq_args)
 
-            wq = WorkerQueue(num_workers)
+    else:
+        wq = WorkerQueue(num_workers)
 
     # we short cut it here if the number of workers is 0.
     # normal map should be faster in this case.
@@ -256,15 +244,11 @@ def tmap(f, seq_args, num_workers=20, worker_queue=None, wait=True, stop_on_erro
             wq.stop()
             if wq.queue.qsize():
                 um = wq.queue.get()
-                if not um is STOP:
+                if um is not STOP:
                     raise RuntimeError("buggy threadmap")
 
-        # see if there were any errors.  If so raise the first one.  This matches map behaviour.
-        # TODO: the traceback doesn't show up nicely.
-        # NOTE: TODO: we might want to return the results anyway?  This should be an option.
         if stop_on_error:
-            error_ones = list(filter(lambda x: x.exception, results))
-            if error_ones:
+            if error_ones := list(filter(lambda x: x.exception, results)):
                 raise error_ones[0].exception
 
         return map(lambda x: x.result, results)

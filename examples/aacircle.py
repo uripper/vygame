@@ -14,8 +14,8 @@ def main():
     pygame.draw.line(s, (0, 0, 0), (250, 250), (250 + 200, 250))
 
     width = 1
+    radius = 200
     for a_radius in range(width):
-        radius = 200
         pygame.gfxdraw.aacircle(s, 250, 250, radius - a_radius, (0, 0, 0))
 
     screen.blit(s, (0, 0))
@@ -29,9 +29,10 @@ def main():
             event = pygame.event.wait()
             if event.type == pygame.QUIT:
                 break
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE or event.unicode == "q":
-                    break
+            if event.type == pygame.KEYDOWN and (
+                event.key == pygame.K_ESCAPE or event.unicode == "q"
+            ):
+                break
             pygame.display.flip()
     finally:
         pygame.quit()

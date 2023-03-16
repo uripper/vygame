@@ -79,10 +79,7 @@ def drawstatus(win):
     showtext(win, pos, p, bgcolor, (255, 255, 55))
 
     pos = showtext(win, (330, 60), "Last Keypress", (255, 255, 255), bgcolor)
-    if last_key:
-        p = "%d, %s" % (last_key, pg.key.name(last_key))
-    else:
-        p = "None"
+    p = "%d, %s" % (last_key, pg.key.name(last_key)) if last_key else "None"
     showtext(win, pos, p, bgcolor, (255, 255, 55))
 
     pos = showtext(win, (10, 90), "Input Grabbed", (255, 255, 255), bgcolor)
@@ -138,10 +135,10 @@ def main():
     for x in range(pg.joystick.get_count()):
         if SDL2 and pg._sdl2.controller.is_controller(x):
             c = pg._sdl2.controller.Controller(x)
-            txt = "Enabled controller: " + c.name
+            txt = f"Enabled controller: {c.name}"
         else:
             j = pg.joystick.Joystick(x)
-            txt = "Enabled joystick: " + j.get_name()
+            txt = f"Enabled joystick: {j.get_name()}"
 
         img = font.render(txt, 1, (50, 200, 50), (0, 0, 0))
         history.append(img)

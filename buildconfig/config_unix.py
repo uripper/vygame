@@ -1,5 +1,6 @@
 """Config on Unix"""
 
+
 import os
 from glob import glob
 import platform
@@ -7,7 +8,7 @@ import logging
 from distutils.sysconfig import get_python_inc
 
 configcommand = os.environ.get('SDL_CONFIG', 'sdl-config',)
-configcommand = configcommand + ' --version --cflags --libs'
+configcommand = f'{configcommand} --version --cflags --libs'
 
 if os.environ.get('PYGAME_EXTRA_BASE', ''):
     extrabases = os.environ['PYGAME_EXTRA_BASE'].split(':')
@@ -31,9 +32,10 @@ class DependencyProg:
             # freetype-config for freetype2 version 2.3.7 on Debian lenny
             # does not recognize multiple command line options. So execute
             # 'command' separately for each option.
-            config = (os.popen(command + ' ' + version_flag).readlines() +
-                      os.popen(command + ' --cflags').readlines() +
-                      os.popen(command + ' --libs').readlines())
+            config = (
+                os.popen(f'{command} {version_flag}').readlines()
+                + os.popen(f'{command} --cflags').readlines()
+            ) + os.popen(f'{command} --libs').readlines()
             flags = ' '.join(config[1:]).split()
 
             # remove this GNU_SOURCE if there... since python has it already,
@@ -48,12 +50,12 @@ class DependencyProg:
             self.cflags = ''
             for f in flags:
                 if f[:2] in ('-l', '-D', '-I', '-L'):
-                    self.cflags += f + ' '
+                    self.cflags += f'{f} '
                 elif f[:3] == '-Wl':
-                    self.cflags += '-Xlinker ' + f + ' '
+                    self.cflags += f'-Xlinker {f} '
             if self.name == 'SDL':
                 inc = '-I' + '/usr/X11R6/include'
-                self.cflags = inc + ' ' + self.cflags
+                self.cflags = f'{inc} {self.cflags}'
         except (ValueError, TypeError):
             print(f'WARNING: "{command}" failed!')
             self.found = 0
@@ -91,7 +93,7 @@ class Dependency:
         for dir in libdirs:
             for name in libnames:
                 path = os.path.join(dir, name)
-                if any(map(os.path.isfile, glob(path+'*'))):
+                if any(map(os.path.isfile, glob(f'{path}*'))):
                     self.lib_dir = dir
 
         if (incname and self.lib_dir and self.inc_dir) or (not incname and self.lib_dir):
@@ -184,13 +186,9 @@ def main(auto_config=False):
 
         if 'PORTMIDI_INC_PORTTIME' in os.environ:
             inc_porttime = os.environ.get('PORTMIDI_INC_PORTTIME')
-            portmidi_as_porttime = True if inc_porttime in ['1', 'True'] else False
+            portmidi_as_porttime = inc_porttime in ['1', 'True']
         else:
-            if os.path.exists('/etc/redhat-release'):
-                portmidi_as_porttime = True
-            else:
-                portmidi_as_porttime = False
-
+            portmidi_as_porttime = bool(os.path.exists('/etc/redhat-release'))
         if portmidi_as_porttime:
             return Dependency('PORTTIME', 'porttime.h', 'libportmidi.so', ['portmidi'])
         else:
@@ -210,9 +208,7 @@ def main(auto_config=False):
             'FREETYPE', 'FREETYPE_CONFIG', 'freetype-config', '2.0',
             ['freetype'], '--ftversion'
         )
-        if freetype_config.found:
-            return freetype_config
-        return pkg_config
+        return freetype_config if freetype_config.found else pkg_config
 
     DEPS = [
         DependencyProg('SDL', 'SDL_CONFIG', 'sdl2-config', '2.0', ['sdl']),

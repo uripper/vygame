@@ -46,7 +46,7 @@ def main():
         print("*** Unable to find the pygame version data in setup.py")
         version = ''
     else:
-        version = f'-{match.group(1)}'
+        version = f'-{match[1]}'
 
     bundle_name = f'pygame{version}-docs-and-examples.tar.gz'
     print(f"Creating bundle {bundle_name}")

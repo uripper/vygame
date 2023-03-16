@@ -60,7 +60,7 @@ class TextInput:
         self.font_small = freetype.SysFont(self.FONT_NAMES, 16)
         self.text_color = text_color
 
-        print("Using font: " + self.font.name)
+        print(f"Using font: {self.font.name}")
 
     def update(self, events) -> None:
         """
@@ -79,14 +79,14 @@ class TextInput:
                 if event.key == pg.K_BACKSPACE:
                     if len(self._ime_text) > 0 and self._ime_text_pos > 0:
                         self._ime_text = (
-                            self._ime_text[0 : self._ime_text_pos - 1]
+                            self._ime_text[: self._ime_text_pos - 1]
                             + self._ime_text[self._ime_text_pos :]
                         )
                         self._ime_text_pos = max(0, self._ime_text_pos - 1)
 
                 elif event.key == pg.K_DELETE:
                     self._ime_text = (
-                        self._ime_text[0 : self._ime_text_pos]
+                        self._ime_text[: self._ime_text_pos]
                         + self._ime_text[self._ime_text_pos + 1 :]
                     )
                 elif event.key == pg.K_LEFT:
@@ -95,7 +95,6 @@ class TextInput:
                     self._ime_text_pos = min(
                         len(self._ime_text), self._ime_text_pos + 1
                     )
-                # Handle ENTER key
                 elif event.key in [pg.K_RETURN, pg.K_KP_ENTER]:
                     # Block if we have no text to append
                     if len(self._ime_text) == 0:
@@ -121,10 +120,8 @@ class TextInput:
                 self._ime_editing = False
                 self._ime_editing_text = ""
                 self._ime_text = (
-                    self._ime_text[0 : self._ime_text_pos]
-                    + event.text
-                    + self._ime_text[self._ime_text_pos :]
-                )
+                    self._ime_text[: self._ime_text_pos] + event.text
+                ) + self._ime_text[self._ime_text_pos :]
                 self._ime_text_pos += len(event.text)
 
     def draw(self, screen: pygame.Surface) -> None:
@@ -144,12 +141,8 @@ class TextInput:
 
         # Chat box updates
         start_pos = self.CHAT_BOX_POS.copy()
-        ime_text_l = self.prompt + self._ime_text[0 : self._ime_text_pos]
-        ime_text_m = (
-            self._ime_editing_text[0 : self._ime_editing_pos]
-            + "|"
-            + self._ime_editing_text[self._ime_editing_pos :]
-        )
+        ime_text_l = self.prompt + self._ime_text[:self._ime_text_pos]
+        ime_text_m = f"{self._ime_editing_text[:self._ime_editing_pos]}|{self._ime_editing_text[self._ime_editing_pos:]}"
         ime_text_r = self._ime_text[self._ime_text_pos :]
 
         rect_text_l = self.font.render_to(

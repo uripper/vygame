@@ -150,7 +150,7 @@ def create_bounding_rect(surface, surf_color, default_pos):
 
     surface.unlock()
 
-    if -1 == xmax:
+    if xmax == -1:
         # No points means a 0 sized rect positioned at default_pos.
         return pygame.Rect(default_pos, (0, 0))
     return pygame.Rect((xmin, ymin), (xmax - xmin + 1, ymax - ymin + 1))
@@ -389,11 +389,11 @@ class DrawEllipseMixin:
         for name in ("surface", "color", "rect", "width"):
             kwargs.pop(name)
 
-            if "surface" == name:
+            if name == "surface":
                 bounds_rect = self.draw_ellipse(surface, **kwargs)
-            elif "color" == name:
+            elif name == "color":
                 bounds_rect = self.draw_ellipse(surface, color, **kwargs)
-            elif "rect" == name:
+            elif name == "rect":
                 bounds_rect = self.draw_ellipse(surface, color, rect, **kwargs)
             else:
                 bounds_rect = self.draw_ellipse(surface, color, rect, width, **kwargs)
@@ -542,10 +542,9 @@ class DrawEllipseMixin:
         surface = pygame.Surface((width, height))
 
         self.draw_ellipse(surface, (255, 0, 0), (0, 0, width, height), border)
-        colored_pixels = 0
-        for y in range(height):
-            if surface.get_at((x_value_test, y)) == (255, 0, 0):
-                colored_pixels += 1
+        colored_pixels = sum(
+            surface.get_at((x_value_test, y)) == (255, 0, 0) for y in range(height)
+        )
         for x in range(width):
             if surface.get_at((x, y_value_test)) == (255, 0, 0):
                 colored_pixels += 1
@@ -1042,11 +1041,7 @@ class DrawEllipseMixin:
                 # Check all the surface points to ensure only the expected_pts
                 # are the ellipse_color.
                 for pt in ((x, y) for x in range(surfw) for y in range(surfh)):
-                    if pt in expected_pts:
-                        expected_color = ellipse_color
-                    else:
-                        expected_color = surface_color
-
+                    expected_color = ellipse_color if pt in expected_pts else surface_color
                     self.assertEqual(surface.get_at(pt), expected_color, pt)
 
                 surface.unlock()
@@ -1100,8 +1095,7 @@ class BaseLineMixin:
             for depth in (8, 16, 24, 32):
                 for flags in (0, SRCALPHA):
                     surface = pygame.display.set_mode(size, flags, depth)
-                    surfaces.append(surface)
-                    surfaces.append(surface.convert_alpha())
+                    surfaces.extend((surface, surface.convert_alpha()))
         return surfaces
 
     @staticmethod
@@ -1338,13 +1332,13 @@ class LineMixin(BaseLineMixin):
         for name in ("surface", "color", "start_pos", "end_pos", "width"):
             kwargs.pop(name)
 
-            if "surface" == name:
+            if name == "surface":
                 bounds_rect = self.draw_line(surface, **kwargs)
-            elif "color" == name:
+            elif name == "color":
                 bounds_rect = self.draw_line(surface, color, **kwargs)
-            elif "start_pos" == name:
+            elif name == "start_pos":
                 bounds_rect = self.draw_line(surface, color, start_pos, **kwargs)
-            elif "end_pos" == name:
+            elif name == "end_pos":
                 bounds_rect = self.draw_line(
                     surface, color, start_pos, end_pos, **kwargs
                 )
@@ -1610,7 +1604,7 @@ class LineMixin(BaseLineMixin):
                             surface, line_color, start, end, thickness
                         )
 
-                        if 0 < thickness:
+                        if thickness > 0:
                             # Calculating the expected_rect after the line is
                             # drawn (it uses what is actually drawn).
                             expected_rect = create_bounding_rect(
@@ -1623,9 +1617,7 @@ class LineMixin(BaseLineMixin):
                         self.assertEqual(
                             bounding_rect,
                             expected_rect,
-                            "start={}, end={}, size={}, thickness={}".format(
-                                start, end, size, thickness
-                            ),
+                            f"start={start}, end={end}, size={size}, thickness={thickness}",
                         )
 
     def test_line__surface_clip(self):
@@ -1667,11 +1659,7 @@ class LineMixin(BaseLineMixin):
                 # Check all the surface points to ensure only the expected_pts
                 # are the line_color.
                 for pt in ((x, y) for x in range(surfw) for y in range(surfh)):
-                    if pt in expected_pts:
-                        expected_color = line_color
-                    else:
-                        expected_color = surface_color
-
+                    expected_color = line_color if pt in expected_pts else surface_color
                     self.assertEqual(surface.get_at(pt), expected_color, pt)
 
                 surface.unlock()
@@ -1787,16 +1775,8 @@ class DrawLineTest(LineMixin, DrawTestCase):
             p = (phigh[0] + xinc * line_width, phigh[1] + yinc * line_width)
             self.assertEqual(self.surf.get_at(p), (0, 0, 0), msg)
 
-            if p1[0] < p2[0]:
-                rx = p1[0]
-            else:
-                rx = p2[0]
-
-            if p1[1] < p2[1]:
-                ry = p1[1]
-            else:
-                ry = p2[1]
-
+            rx = min(p1[0], p2[0])
+            ry = min(p1[1], p2[1])
             w = abs(p2[0] - p1[0]) + 1 + xinc * (line_width - 1)
             h = abs(p2[1] - p1[1]) + 1 + yinc * (line_width - 1)
             msg += f", {rec}"
@@ -2024,13 +2004,13 @@ class LinesMixin(BaseLineMixin):
         for name in ("surface", "color", "closed", "points", "width"):
             kwargs.pop(name)
 
-            if "surface" == name:
+            if name == "surface":
                 bounds_rect = self.draw_lines(surface, **kwargs)
-            elif "color" == name:
+            elif name == "color":
                 bounds_rect = self.draw_lines(surface, color, **kwargs)
-            elif "closed" == name:
+            elif name == "closed":
                 bounds_rect = self.draw_lines(surface, color, closed, **kwargs)
-            elif "points" == name:
+            elif name == "points":
                 bounds_rect = self.draw_lines(surface, color, closed, points, **kwargs)
             else:
                 bounds_rect = self.draw_lines(
@@ -2344,7 +2324,7 @@ class LinesMixin(BaseLineMixin):
                             surface, line_color, closed, pts, thickness
                         )
 
-                        if 0 < thickness:
+                        if thickness > 0:
                             # Calculating the expected_rect after the lines are
                             # drawn (it uses what is actually drawn).
                             expected_rect = create_bounding_rect(
@@ -2395,11 +2375,7 @@ class LinesMixin(BaseLineMixin):
                     # Check all the surface points to ensure only the
                     # expected_pts are the line_color.
                     for pt in ((x, y) for x in range(surfw) for y in range(surfh)):
-                        if pt in expected_pts:
-                            expected_color = line_color
-                        else:
-                            expected_color = surface_color
-
+                        expected_color = line_color if pt in expected_pts else surface_color
                         self.assertEqual(surface.get_at(pt), expected_color, pt)
 
                     surface.unlock()
@@ -2628,16 +2604,12 @@ class AALineMixin(BaseLineMixin):
         for name in ("surface", "color", "start_pos", "end_pos"):
             kwargs.pop(name)
 
-            if "surface" == name:
-                bounds_rect = self.draw_aaline(surface, **kwargs)
-            elif "color" == name:
+            if name == "color":
                 bounds_rect = self.draw_aaline(surface, color, **kwargs)
-            elif "start_pos" == name:
+            elif name == "start_pos":
                 bounds_rect = self.draw_aaline(surface, color, start_pos, **kwargs)
-            elif "end_pos" == name:
-                bounds_rect = self.draw_aaline(
-                    surface, color, start_pos, end_pos, **kwargs
-                )
+            elif name == "surface":
+                bounds_rect = self.draw_aaline(surface, **kwargs)
             else:
                 bounds_rect = self.draw_aaline(
                     surface, color, start_pos, end_pos, **kwargs
@@ -3367,16 +3339,12 @@ class AALinesMixin(BaseLineMixin):
         for name in ("surface", "color", "closed", "points"):
             kwargs.pop(name)
 
-            if "surface" == name:
-                bounds_rect = self.draw_aalines(surface, **kwargs)
-            elif "color" == name:
-                bounds_rect = self.draw_aalines(surface, color, **kwargs)
-            elif "closed" == name:
+            if name == "closed":
                 bounds_rect = self.draw_aalines(surface, color, closed, **kwargs)
-            elif "points" == name:
-                bounds_rect = self.draw_aalines(
-                    surface, color, closed, points, **kwargs
-                )
+            elif name == "color":
+                bounds_rect = self.draw_aalines(surface, color, **kwargs)
+            elif name == "surface":
+                bounds_rect = self.draw_aalines(surface, **kwargs)
             else:
                 bounds_rect = self.draw_aalines(
                     surface, color, closed, points, **kwargs

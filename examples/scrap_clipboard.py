@@ -62,7 +62,7 @@ while going:
                     namehint = t.split("/")[1]
                     if namehint in ["bmp", "png", "jpg"]:
                         f = BytesIO(r)
-                        loaded_surf = pg.image.load(f, "." + namehint)
+                        loaded_surf = pg.image.load(f, f".{namehint}")
                         screen.blit(loaded_surf, (0, 0))
 
         elif e.type == pg.KEYDOWN and e.key == pg.K_p:
@@ -82,11 +82,9 @@ while going:
         elif e.type == pg.KEYDOWN and e.key == pg.K_i:
             print("Putting image into the clipboard.")
             scrap.set_mode(pg.SCRAP_CLIPBOARD)
-            fp = open(os.path.join(main_dir, "data", "liquid.bmp"), "rb")
-            buf = fp.read()
-            scrap.put("image/bmp", buf)
-            fp.close()
-
+            with open(os.path.join(main_dir, "data", "liquid.bmp"), "rb") as fp:
+                buf = fp.read()
+                scrap.put("image/bmp", buf)
         elif e.type in (pg.KEYDOWN, pg.MOUSEBUTTONDOWN):
             usage()
     pg.display.flip()

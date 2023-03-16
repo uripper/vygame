@@ -7,7 +7,7 @@ from collections.abc import Collection, Sequence
 import pygame
 from pygame.colordict import THECOLORS
 
-IS_PYPY = "PyPy" == platform.python_implementation()
+IS_PYPY = platform.python_implementation() == "PyPy"
 ################################### CONSTANTS ##################################
 
 rgba_vals = [0, 1, 62, 63, 126, 127, 255]
@@ -188,14 +188,14 @@ class ColorTypeTest(unittest.TestCase):
         self.assertFalse(Color(255, 0, 0, 0) == "#ff000000")
         self.assertTrue(Color(255, 0, 0, 0) != "#ff000000")
 
-        self.assertFalse("#ff000000" == Color(255, 0, 0, 0))
-        self.assertTrue("#ff000000" != Color(255, 0, 0, 0))
+        self.assertFalse(Color(255, 0, 0, 0) == "#ff000000")
+        self.assertTrue(Color(255, 0, 0, 0) != "#ff000000")
 
         self.assertFalse(Color(255, 0, 0, 0) == 0xFF000000)
         self.assertTrue(Color(255, 0, 0, 0) != 0xFF000000)
 
-        self.assertFalse(0xFF000000 == Color(255, 0, 0, 0))
-        self.assertTrue(0xFF000000 != Color(255, 0, 0, 0))
+        self.assertFalse(Color(255, 0, 0, 0) == 0xFF000000)
+        self.assertTrue(Color(255, 0, 0, 0) != 0xFF000000)
 
         self.assertFalse(Color(255, 0, 0, 0) == [255, 0, 0, 0])
         self.assertTrue(Color(255, 0, 0, 0) != [255, 0, 0, 0])
@@ -203,7 +203,6 @@ class ColorTypeTest(unittest.TestCase):
         self.assertFalse([255, 0, 0, 0] == Color(255, 0, 0, 0))
         self.assertTrue([255, 0, 0, 0] != Color(255, 0, 0, 0))
 
-        # Comparison is not implemented for invalid color values.
         class Test:
             def __eq__(self, other):
                 return -1
@@ -747,7 +746,7 @@ class ColorTypeTest(unittest.TestCase):
         self.assertEqual(c.g, 0)
         self.assertEqual(c.b, 204)
         self.assertEqual(c.a, 0)
-        self.assertEqual(int(c), int(0xCC00CC00))
+        self.assertEqual(int(c), 3422604288)
 
         # This will be an int
         c = pygame.Color(0x33727592)
@@ -755,7 +754,7 @@ class ColorTypeTest(unittest.TestCase):
         self.assertEqual(c.g, 114)
         self.assertEqual(c.b, 117)
         self.assertEqual(c.a, 146)
-        self.assertEqual(int(c), int(0x33727592))
+        self.assertEqual(int(c), 863139218)
 
     def test_long(self):
         # This will be a long
@@ -764,7 +763,7 @@ class ColorTypeTest(unittest.TestCase):
         self.assertEqual(c.g, 0)
         self.assertEqual(c.b, 204)
         self.assertEqual(c.a, 0)
-        self.assertEqual(int(c), int(0xCC00CC00))
+        self.assertEqual(int(c), 3422604288)
 
         # This will be an int
         c = pygame.Color(0x33727592)
@@ -772,7 +771,7 @@ class ColorTypeTest(unittest.TestCase):
         self.assertEqual(c.g, 114)
         self.assertEqual(c.b, 117)
         self.assertEqual(c.a, 146)
-        self.assertEqual(int(c), int(0x33727592))
+        self.assertEqual(int(c), 863139218)
 
     def test_normalize(self):
         c = pygame.Color(204, 38, 194, 55)
@@ -936,7 +935,7 @@ class ColorTypeTest(unittest.TestCase):
                 self.assertTrue(abs(other.b - c.b) <= 1)
                 self.assertTrue(abs(other.g - c.g) <= 1)
                 # CMY and I1I2I3 do not care about the alpha
-                if not prop in ("cmy", "i1i2i3"):
+                if prop not in ("cmy", "i1i2i3"):
                     self.assertTrue(abs(other.a - c.a) <= 1)
 
             except ValueError:

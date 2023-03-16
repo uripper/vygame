@@ -16,6 +16,7 @@ Vista and newer).
 
 """
 
+
 # Ensure that the computer is running Windows Vista or newer
 import os
 import sys
@@ -42,13 +43,11 @@ else:
 
 if selection == "y":
     msg = "Stretching is prevented."
-else:
-    msg = "Stretching is not prevented."
-
-# Prevent stretching
-if selection == "y":
     user32 = ctypes.windll.user32
     user32.SetProcessDPIAware()
+
+else:
+    msg = "Stretching is not prevented."
 
 # Show screen
 pg.display.init()

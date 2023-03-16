@@ -83,14 +83,17 @@ compiler_options = {
 
 
 def spawn(self, cmd, **kwargs):
-    should_use_avx2 = False
     # try to be thorough in detecting that we are on a platform that potentially supports AVX2
     machine_name = platform.machine()
-    if ((machine_name.startswith(("x86", "i686")) or
-        machine_name.lower() == "amd64") and
-            os.environ.get("MAC_ARCH") != "arm64"):
-        should_use_avx2 = True
-
+    should_use_avx2 = bool(
+        (
+            (
+                machine_name.startswith(("x86", "i686"))
+                or machine_name.lower() == "amd64"
+            )
+            and os.environ.get("MAC_ARCH") != "arm64"
+        )
+    )
     if should_use_avx2:
         extra_options = compiler_options.get(self.compiler_type)
         if extra_options is not None:
@@ -138,13 +141,12 @@ def compilation_help():
     """ On failure point people to a web page for help.
     """
     the_system = platform.system()
-    if the_system == 'Linux':
-        if hasattr(platform, 'linux_distribution'):
-            distro = platform.linux_distribution()
-            if distro[0].lower() == 'ubuntu':
-                the_system = 'Ubuntu'
-            elif distro[0].lower() == 'debian':
-                the_system = 'Debian'
+    if the_system == 'Linux' and hasattr(platform, 'linux_distribution'):
+        distro = platform.linux_distribution()
+        if distro[0].lower() == 'ubuntu':
+            the_system = 'Ubuntu'
+        elif distro[0].lower() == 'debian':
+            the_system = 'Debian'
 
     help_urls = {
         'Linux': 'https://www.pygame.org/wiki/Compilation',
@@ -258,7 +260,7 @@ if compile_cython:
 
         c_file = os.path.splitext(pyx_file)[0].split(os.path.sep)
         del c_file[1:3]  # output in src_c/
-        c_file = os.path.sep.join(c_file) + '.c'
+        c_file = f'{os.path.sep.join(c_file)}.c'
 
         # update outdated .c files
         if os.path.isfile(c_file):
@@ -269,10 +271,7 @@ if compile_cython:
             else:
                 dep_timestamp, dep = deps.newest_dependency(pyx_file)
                 priority = 2 - (dep in deps.immediate_dependencies(pyx_file))
-            if dep_timestamp > c_timestamp:
-                outdated = True
-            else:
-                outdated = False
+            outdated = dep_timestamp > c_timestamp
         else:
             outdated = True
             priority = 0
@@ -290,7 +289,7 @@ if compile_cython:
     for i, kwargs in enumerate(queue):
         kwargs['progress'] = f'[{i + 1}/{count}] '
         cythonize_one(**kwargs)
-    
+
     if cython_only:
         sys.exit(0)
 
@@ -442,10 +441,12 @@ for e in extensions:
         # skip -Werror on alphablit because sse2neon is used on arm mac
         continue
 
-    if "freetype" in e.name and sys.platform not in ("darwin", "win32"):
-        # TODO: fix freetype issues here
-        if sysconfig.get_config_var("MAINCC") != "clang":        
-            e.extra_compile_args.append("-Wno-error=unused-but-set-variable")
+    if (
+        "freetype" in e.name
+        and sys.platform not in ("darwin", "win32")
+        and sysconfig.get_config_var("MAINCC") != "clang"
+    ):
+        e.extra_compile_args.append("-Wno-error=unused-but-set-variable")
 
     if "mask" in e.name and sys.platform == "win32":
         # skip analyze warnings that pop up a lot in mask for now. TODO fix
@@ -467,10 +468,10 @@ if os.path.exists(alternate_font):
 have_font = False
 have_freetype = False
 for e in extensions:
-    if e.name == 'font':
-        have_font = True
     if e.name == '_freetype':
         have_freetype = True
+    elif e.name == 'font':
+        have_font = True
 if not have_font and have_freetype:
     shutil.copyfile(os.path.join('src_py', 'ftfont.py'), alternate_font)
 
@@ -483,21 +484,17 @@ data_files = [('pygame', pygame_data_files)]
 stub_dir = os.path.join('buildconfig', 'stubs', 'pygame')
 pygame_data_files.append(os.path.join(stub_dir, 'py.typed'))
 type_files = glob.glob(os.path.join(stub_dir, '*.pyi'))
-for type_file in type_files:
-    pygame_data_files.append(type_file)
-
-_sdl2 = glob.glob(os.path.join(stub_dir, '_sdl2', '*.pyi'))
-if _sdl2:
+pygame_data_files.extend(iter(type_files))
+if _sdl2 := glob.glob(os.path.join(stub_dir, '_sdl2', '*.pyi')):
     _sdl2_data_files = []
     data_files.append(('pygame/_sdl2', _sdl2_data_files))
-    for type_file in _sdl2:
-        _sdl2_data_files.append(type_file)
-
+    _sdl2_data_files.extend(iter(_sdl2))
 # add non .py files in lib directory
-for f in glob.glob(os.path.join('src_py', '*')):
-    if not f[-3:] == '.py' and not f[-4:] == '.doc' and os.path.isfile(f):
-        pygame_data_files.append(f)
-
+pygame_data_files.extend(
+    f
+    for f in glob.glob(os.path.join('src_py', '*'))
+    if f[-3:] != '.py' and f[-4:] != '.doc' and os.path.isfile(f)
+)
 # We don't need to deploy tests, example code, or docs inside a game
 
 # tests/fixtures
@@ -550,7 +547,7 @@ add_datafiles(data_files, 'pygame/docs/generated',
 
 # generate the version module
 def parse_version(ver):
-    return ', '.join(s for s in re.findall(r'\d+', ver)[0:3])
+    return ', '.join(re.findall(r'\d+', ver)[:3])
 
 
 def parse_source_version():
@@ -564,14 +561,14 @@ def parse_source_version():
     with open(pg_header) as f:
         for line in f:
             if pgh_major == -1:
-                m = major_exp_search(line)
-                if m: pgh_major = int(m.group(1))
-            if pgh_minor == -1:
-                m = minor_exp_search(line)
-                if m: pgh_minor = int(m.group(1))
-            if pgh_patch == -1:
-                m = patch_exp_search(line)
-                if m: pgh_patch = int(m.group(1))
+                if m := major_exp_search(line):
+                    pgh_major = int(m.group(1))
+            if m := minor_exp_search(line):
+                if pgh_minor == -1:
+                    pgh_minor = int(m.group(1))
+            if m := patch_exp_search(line):
+                if pgh_patch == -1:
+                    pgh_patch = int(m.group(1))
     if pgh_major == -1:
         raise SystemExit("_pygame.h: cannot find PG_MAJOR_VERSION")
     if pgh_minor == -1:
@@ -591,9 +588,13 @@ def write_version_module(pygame_version, revision):
         header = header_file.read()
     with open(os.path.join('src_py', 'version.py'), 'w') as version_file:
         version_file.write(header)
-        version_file.write('ver = "' + pygame_version + '"  # pylint: disable=invalid-name\n')
+        version_file.write(
+            f'ver = "{pygame_version}' + '"  # pylint: disable=invalid-name\n'
+        )
         version_file.write(f'vernum = PygameVersion({vernum})\n')
-        version_file.write('rev = "' + revision + '"  # pylint: disable=invalid-name\n')
+        version_file.write(
+            f'rev = "{revision}' + '"  # pylint: disable=invalid-name\n'
+        )
         version_file.write('\n__all__ = ["SDL", "ver", "vernum", "rev"]\n')
 
 
@@ -638,7 +639,7 @@ if sys.platform == 'win32' and not 'WIN32_DO_NOT_INCLUDE_DEPS' in os.environ:
                 pass
             else:
                 root_set[root] = 1
-                root_set.update(dependencies(deps))
+                root_set |= dependencies(deps)
         return root_set
 
 
@@ -711,7 +712,7 @@ if sys.platform == 'win32' and not 'WIN32_DO_NOT_INCLUDE_DEPS' in os.environ:
         else:
             try:
                 base_file = os.path.splitext(fname)[0]
-                obj_file = base_file + '.obj'
+                obj_file = f'{base_file}.obj'
                 os.remove(obj_file)
             except OSError:
                 pass
@@ -775,7 +776,7 @@ for e in extensions[:]:
     if e.name.startswith('COPYLIB_'):
         extensions.remove(e)  # don't compile the COPYLIBs, just clean them
     else:
-        e.name = 'pygame.' + e.name  # prepend package name on modules
+        e.name = f'pygame.{e.name}'
 
 
 # data installer with improved intelligence over distutils
@@ -832,7 +833,7 @@ if "bdist_msi" in sys.argv:
 
         def get_installer_filename(self, fullname):
             if revision:
-                fullname += '-hg_' + revision
+                fullname += f'-hg_{revision}'
             return bdist_msi.bdist_msi.get_installer_filename(self, fullname)
 
 
@@ -1045,7 +1046,7 @@ if STRIPPED:
         "data_files": data_files
     }
 
-PACKAGEDATA.update(METADATA)
+PACKAGEDATA |= METADATA
 PACKAGEDATA.update(EXTRAS)
 
 try:

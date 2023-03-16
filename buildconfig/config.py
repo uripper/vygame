@@ -56,63 +56,64 @@ def is_msys_mingw():
 def prepdep(dep, basepath):
     """add some vars to a dep"""
     if dep.libs:
-        dep.line = dep.name + ' ='
+        dep.line = f'{dep.name} ='
         for lib in dep.libs:
-            dep.line += ' -l' + lib
+            dep.line += f' -l{lib}'
     else:
-        dep.line = dep.name + ' = -I.'
+        dep.line = f'{dep.name} = -I.'
 
-    dep.varname = '$('+dep.name+')'
+    dep.varname = f'$({dep.name})'
 
     if not dep.found:
         if dep.name == 'SDL': #fudge if this is unfound SDL
             dep.line = 'SDL = -I/NEED_INC_PATH_FIX -L/NEED_LIB_PATH_FIX -lSDL'
-            dep.varname = '$('+dep.name+')'
+            dep.varname = f'$({dep.name})'
             dep.found = 1
         return
 
     incs = []
     lids = []
-    IPREFIX = ' -I$(BASE)' if basepath else ' -I'
-    LPREFIX = ' -L$(BASE)' if basepath else ' -L'
     startind = len(basepath) if basepath else 0
     if dep.inc_dir:
+        IPREFIX = ' -I$(BASE)' if basepath else ' -I'
         if isinstance(dep.inc_dir, str):
             incs.append(IPREFIX+dep.inc_dir[startind:])
         else:
-            for dir in dep.inc_dir:
-                incs.append(IPREFIX+dir[startind:])
+            incs.extend(IPREFIX+dir[startind:] for dir in dep.inc_dir)
     if dep.lib_dir:
+        LPREFIX = ' -L$(BASE)' if basepath else ' -L'
         if isinstance(dep.lib_dir, str):
             lids.append(LPREFIX+dep.lib_dir[startind:])
         else:
-            for dir in dep.lib_dir:
-                lids.append(LPREFIX+dir[startind:])
-    libs = ''
-    for lib in dep.libs:
-        libs += ' -l' + lib
-
+            lids.extend(LPREFIX+dir[startind:] for dir in dep.lib_dir)
+    libs = ''.join(f' -l{lib}' for lib in dep.libs)
     if dep.name.startswith('COPYLIB_'):
         dep.line = dep.name + libs + ''.join(lids)
     else:
-        dep.line = dep.name+' =' + ''.join(incs) + ''.join(lids) + ' ' + dep.cflags + libs
+        dep.line = (
+            f'{dep.name} ='
+            + ''.join(incs)
+            + ''.join(lids)
+            + ' '
+            + dep.cflags
+            + libs
+        )
 
 def writesetupfile(deps, basepath, additional_lines):
     """create a modified copy of Setup.SDLx.in"""
     sdl_setup_filename = os.path.join(BASE_PATH, 'buildconfig',
                                           'Setup.SDL2.in')
 
-    with open(sdl_setup_filename) as origsetup, \
-            open(os.path.join(BASE_PATH, 'Setup'), 'w') as newsetup:
+    with (open(sdl_setup_filename) as origsetup, open(os.path.join(BASE_PATH, 'Setup'), 'w') as newsetup):
         line = ''
-        while line.find('#--StartConfig') == -1:
+        while '#--StartConfig' not in line:
             newsetup.write(line)
             line = origsetup.readline()
         while line.find('#--EndConfig') == -1:
             line = origsetup.readline()
 
         if basepath:
-            newsetup.write('BASE = ' + basepath + '\n')
+            newsetup.write(f'BASE = {basepath}' + '\n')
         for d in deps:
             newsetup.write(d.line + '\n')
 
@@ -125,12 +126,11 @@ def writesetupfile(deps, basepath, additional_lines):
             parts = l.split()
             for al in additional_lines:
                 aparts = al.split()
-                if aparts and parts:
-                    if aparts[0] == parts[0]:
-                        #print('the same!' + repr(aparts) + repr(parts))
-                        #the same, we should not add the old one.
-                        #It will be overwritten by the new one.
-                        addit = 0
+                if aparts and parts and aparts[0] == parts[0]:
+                    #print('the same!' + repr(aparts) + repr(parts))
+                    #the same, we should not add the old one.
+                    #It will be overwritten by the new one.
+                    addit = 0
             if addit:
                 new_lines.append(l)
 
@@ -144,13 +144,13 @@ def writesetupfile(deps, basepath, additional_lines):
             if not line.startswith('COPYLIB') and not (line and line[0]=='#'):
                 lineDeps = set(re.findall(r'\$\([\w]+\)', line, re.I))
                 if lineDeps.difference(legalVars):
-                    newsetup.write('#'+line)
+                    newsetup.write(f'#{line}')
                     useit = 0
                 if useit:
                     for d in deps:
                         if d.varname in lineDeps and not d.found:
                             useit = 0
-                            newsetup.write('#'+line)
+                            newsetup.write(f'#{line}')
                             break
                 if useit:
                     legalVars.add(f"$({line.split('=')[0].strip()})")
@@ -223,10 +223,9 @@ Only SDL2 is supported now.""")
             os.path.join(BASE_PATH, 'buildconfig', "Setup_Unix.in")).readlines()
 
 
-    if os.path.isfile('Setup'):
-        if auto:
-            logging.info('Backing up existing "Setup" file into Setup.bak')
-            shutil.copyfile(os.path.join(BASE_PATH, 'Setup'), os.path.join(BASE_PATH, 'Setup.bak'))
+    if os.path.isfile('Setup') and auto:
+        logging.info('Backing up existing "Setup" file into Setup.bak')
+        shutil.copyfile(os.path.join(BASE_PATH, 'Setup'), os.path.join(BASE_PATH, 'Setup.bak'))
 
     deps = CFG.main(**kwds, auto_config=auto)
     if '-conan' in sys.argv:

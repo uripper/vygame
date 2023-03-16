@@ -12,10 +12,7 @@ class MidiInputTest(unittest.TestCase):
 
         pygame.midi.init()
         in_id = pygame.midi.get_default_input_id()
-        if in_id != -1:
-            self.midi_input = pygame.midi.Input(in_id)
-        else:
-            self.midi_input = None
+        self.midi_input = pygame.midi.Input(in_id) if in_id != -1 else None
 
     def tearDown(self):
         if self.midi_input:
@@ -79,10 +76,7 @@ class MidiOutputTest(unittest.TestCase):
 
         pygame.midi.init()
         m_out_id = pygame.midi.get_default_output_id()
-        if m_out_id != -1:
-            self.midi_output = pygame.midi.Output(m_out_id)
-        else:
-            self.midi_output = None
+        self.midi_output = pygame.midi.Output(m_out_id) if m_out_id != -1 else None
 
     def tearDown(self):
         if self.midi_output:

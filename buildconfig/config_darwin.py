@@ -56,16 +56,16 @@ class FrameworkDependency(Dependency):
             n += 'Library/Frameworks/'
             fmwk = n + self.libs + '.framework/Versions/Current/'
             if os.path.isdir(fmwk):
-                print('Framework ' + self.libs + ' found')
+                print(f'Framework {self.libs} found')
                 self.found = 1
-                self.inc_dir = fmwk + 'Headers'
+                self.inc_dir = f'{fmwk}Headers'
                 self.cflags = (
                     f'-Xlinker "-framework" -Xlinker "{self.libs}"' +
                     f' -Xlinker "-F{n}"')
                 self.origlib = self.libs
                 self.libs = ''
                 return
-        print('Framework ' + self.libs + ' not found')
+        print(f'Framework {self.libs} not found')
 
 
 class DependencyPython:
@@ -112,9 +112,7 @@ def find_freetype():
     freetype_config = DependencyProg(
         'FREETYPE', 'FREETYPE_CONFIG', 'freetype-config', '2.0', ['freetype'], '--ftversion'
     )
-    if freetype_config.found:
-        return freetype_config
-    return pkg_config
+    return freetype_config if freetype_config.found else pkg_config
 
 
 
@@ -140,14 +138,15 @@ def main(auto_config=False):
     ])
 
     print('Hunting dependencies...')
-    incdirs = ['/usr/local/include', '/opt/homebrew/include']
-    incdirs.extend(['/usr/local/include/SDL2', '/opt/homebrew/include/SDL2', '/opt/local/include/SDL2'])
-
-    incdirs.extend([
-       #'/usr/X11/include',
-       '/opt/local/include',
-       '/opt/local/include/freetype2/freetype']
-    )
+    incdirs = [
+        '/usr/local/include',
+        '/opt/homebrew/include',
+        '/usr/local/include/SDL2',
+        '/opt/homebrew/include/SDL2',
+        '/opt/local/include/SDL2',
+        '/opt/local/include',
+        '/opt/local/include/freetype2/freetype',
+    ]
     #libdirs = ['/usr/local/lib', '/usr/X11/lib', '/opt/local/lib']
     libdirs = ['/usr/local/lib', '/opt/local/lib', '/opt/homebrew/lib']
 
@@ -169,7 +168,7 @@ def main(auto_config=False):
             if not found:
                 DEPS[DEPS.index(d)] = d[0]
 
-    DEPS[0].cflags = '-Ddarwin '+ DEPS[0].cflags
+    DEPS[0].cflags = f'-Ddarwin {DEPS[0].cflags}'
     return DEPS
 
 

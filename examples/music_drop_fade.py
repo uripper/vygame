@@ -102,10 +102,7 @@ def play_next():
     pg.mixer.music.set_volume(volume)
     pg.mixer.music.set_endevent(MUSIC_DONE)
 
-    if nxt.rpartition(".")[2].lower() in music_can_seek:
-        starting_pos = 0
-    else:
-        starting_pos = -1
+    starting_pos = 0 if nxt.rpartition(".")[2].lower() in music_can_seek else -1
 
 
 def draw_text_line(text, y=0):

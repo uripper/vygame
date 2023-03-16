@@ -15,9 +15,11 @@ class Dependency:
         self.libs = None
         self.found = 0
         self.cflags = ''
-        infos = [info for info in conanbuildinfo['dependencies'] if info['name'] == conan_name]
-
-        if infos:
+        if infos := [
+            info
+            for info in conanbuildinfo['dependencies']
+            if info['name'] == conan_name
+        ]:
             info = infos[0]
             self.found = 1
             self.lib_dir = info['lib_paths'][:]
@@ -30,7 +32,7 @@ class Dependency:
                     # so that it can pass things through to the linker from the Setup file.
                     self.cflags += (f' -Xlinker "-framework" -Xlinker "{n}"')
 
-        if not extra_libs is None:
+        if extra_libs is not None:
             self.libs.extend(extra_libs)
 
 
@@ -72,7 +74,7 @@ def main(sdl2=True, auto_config=False):
     conanbuildinfo_json = os.path.join('build', 'conan', 'conanbuildinfo.json')
     conanbuildinfo = json.load(open(conanbuildinfo_json))
 
-    DEPS = [
+    return [
         Dependency(conanbuildinfo, "SDL", "sdl2"),
         Dependency(conanbuildinfo, "FONT", "sdl2_ttf"),
         Dependency(conanbuildinfo, "IMAGE", "sdl2_image"),
@@ -83,8 +85,6 @@ def main(sdl2=True, auto_config=False):
         Dependency(conanbuildinfo, "PORTMIDI", "portmidi"),
         Dependency(conanbuildinfo, "PORTTIME", "portmidi"),
     ]
-
-    return DEPS
 
 if __name__ == '__main__':
     print("""This is the configuration subscript for the Conan package manager.

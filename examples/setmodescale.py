@@ -10,6 +10,7 @@ Passing SCALED to pygame.display.set_mode means the resolution depends
 on desktop size and the graphics are scaled.
 """
 
+
 import pygame as pg
 
 pg.init()
@@ -51,7 +52,7 @@ while not done:
             pg.display._resize_event(event)
 
     i += 1
-    i = i % screen.get_width()
+    i %= screen.get_width()
     j += i % 2
     j = j % screen.get_height()
 

@@ -58,7 +58,7 @@ def as_refid(refuri):
 
 
 def as_refuri(refid):
-    return "#" + refid
+    return f"#{refid}"
 
 
 def get_ids(node):

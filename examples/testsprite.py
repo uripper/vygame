@@ -9,6 +9,7 @@ It is an abomination of ugly code, and mostly used for testing.
 
 See pg.examples.aliens for some prettyier code.
 """
+
 import sys
 import os
 
@@ -34,11 +35,7 @@ if "-update_rects" in sys.argv:
 if "-noupdate_rects" in sys.argv:
     update_rects = False
 
-use_static = False
-if "-static" in sys.argv:
-    use_static = True
-
-
+use_static = "-static" in sys.argv
 use_layered_dirty = False
 if "-layered_dirty" in sys.argv:
     update_rects = True
@@ -74,11 +71,7 @@ if "-width" in sys.argv:
     i = sys.argv.index("-width")
     screen_dims[0] = int(sys.argv[i + 1])
 
-if "-alpha" in sys.argv:
-    use_alpha = True
-else:
-    use_alpha = False
-
+use_alpha = "-alpha" in sys.argv
 print(screen_dims)
 
 
@@ -208,12 +201,8 @@ def main(
         ##        sprites = pg.sprite.FastRenderGroup()
         sprites = pg.sprite.LayeredDirty()
     else:
-        if update_rects:
-            sprites = pg.sprite.RenderUpdates()
-        else:
-            sprites = pg.sprite.Group()
-
-    for i in range(0, numsprites):
+        sprites = pg.sprite.RenderUpdates() if update_rects else pg.sprite.Group()
+    for i in range(numsprites):
         if use_static and i % 2 == 0:
             sprites.add(Static())
         sprites.add(Thingy())

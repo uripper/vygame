@@ -25,7 +25,7 @@ def equal_images(s1, s2):
     return True
 
 
-IS_PYPY = "PyPy" == platform.python_implementation()
+IS_PYPY = platform.python_implementation() == "PyPy"
 
 
 @unittest.skipIf(IS_PYPY, "pypy skip known failure")  # TODO
@@ -55,12 +55,7 @@ class FontModuleTest(unittest.TestCase):
     def test_SysFont(self):
         # Can only check that a font object is returned.
         fonts = pygame_font.get_fonts()
-        if "arial" in fonts:
-            # Try to use arial font if it is there, rather than a random font
-            #  which can be different depending on installed fonts on the system.
-            font_name = "arial"
-        else:
-            font_name = sorted(fonts)[0]
+        font_name = "arial" if "arial" in fonts else sorted(fonts)[0]
         o = pygame_font.SysFont(font_name, 20)
         self.assertTrue(isinstance(o, pygame_font.FontType))
         o = pygame_font.SysFont(font_name, 20, italic=True)
@@ -129,19 +124,12 @@ class FontModuleTest(unittest.TestCase):
         not_a_font = "thisisnotafont"
         not_a_font_b = b"thisisnotafont"
         good_font_names = [
-            # Check single name bytes.
             font_b,
-            # Check string of comma-separated names.
             ",".join([not_a_font, font, not_a_font]),
-            # Check list of names.
             [not_a_font, font, not_a_font],
-            # Check generator:
-            (name for name in [not_a_font, font, not_a_font]),
-            # Check comma-separated bytes.
+            iter([not_a_font, font, not_a_font]),
             b",".join([not_a_font_b, font_b, not_a_font_b]),
-            # Check list of bytes.
             [not_a_font_b, font_b, not_a_font_b],
-            # Check mixed list of bytes and string.
             [font, not_a_font, font_b, not_a_font_b],
         ]
         for font_name in good_font_names:
@@ -155,7 +143,7 @@ class FontModuleTest(unittest.TestCase):
             not_a_font,
             ",".join([not_a_font, not_a_font, not_a_font]),
             [not_a_font, not_a_font, not_a_font],
-            (name for name in [not_a_font, not_a_font, not_a_font]),
+            iter([not_a_font, not_a_font, not_a_font]),
             not_a_font_b,
             b",".join([not_a_font_b, not_a_font_b, not_a_font_b]),
             [not_a_font_b, not_a_font_b, not_a_font_b],
@@ -347,22 +335,6 @@ class FontTypeTest(unittest.TestCase):
         self.assertIsNone(bm[0])
 
         return  # unfinished
-        # The documentation is useless here. How large a list?
-        # How do list positions relate to character codes?
-        # What about unicode characters?
-
-        # __doc__ (as of 2008-08-02) for pygame_font.Font.metrics:
-
-        # Font.metrics(text): return list
-        # Gets the metrics for each character in the passed string.
-        #
-        # The list contains tuples for each character, which contain the
-        # minimum X offset, the maximum X offset, the minimum Y offset, the
-        # maximum Y offset and the advance offset (bearing plus width) of the
-        # character. [(minx, maxx, miny, maxy, advance), (minx, maxx, miny,
-        # maxy, advance), ...]
-
-        self.fail()
 
     def test_render(self):
         f = pygame_font.Font(None, 20)

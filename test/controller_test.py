@@ -75,22 +75,19 @@ class ControllerTypeTest(unittest.TestCase):
                 return controller.Controller(i)
 
     def test_construction(self):
-        c = self._get_first_controller()
-        if c:
+        if c := self._get_first_controller():
             self.assertIsInstance(c, controller.Controller)
         else:
             self.skipTest("No controller connected")
 
     def test__auto_init(self):
-        c = self._get_first_controller()
-        if c:
+        if c := self._get_first_controller():
             self.assertTrue(c.get_init())
         else:
             self.skipTest("No controller connected")
 
     def test_get_init(self):
-        c = self._get_first_controller()
-        if c:
+        if c := self._get_first_controller():
             self.assertTrue(c.get_init())
             c.quit()
             self.assertFalse(c.get_init())
@@ -109,16 +106,14 @@ class ControllerTypeTest(unittest.TestCase):
         self.assertIsInstance(c, controller.Controller)
 
     def test_as_joystick(self):
-        c = self._get_first_controller()
-        if c:
+        if c := self._get_first_controller():
             joy = c.as_joystick()
             self.assertIsInstance(joy, type(pygame.joystick.Joystick(0)))
         else:
             self.skipTest("No controller connected")
 
     def test_get_mapping(self):
-        c = self._get_first_controller()
-        if c:
+        if c := self._get_first_controller():
             mapping = c.get_mapping()
             self.assertIsInstance(mapping, dict)
             self.assertIsNotNone(mapping["a"])
@@ -126,8 +121,7 @@ class ControllerTypeTest(unittest.TestCase):
             self.skipTest("No controller connected")
 
     def test_set_mapping(self):
-        c = self._get_first_controller()
-        if c:
+        if c := self._get_first_controller():
             mapping = c.get_mapping()
             mapping["a"] = "b3"
             mapping["y"] = "b0"
@@ -138,11 +132,10 @@ class ControllerTypeTest(unittest.TestCase):
             for i in mapping:
                 if mapping[i] not in ("a", "y"):
                     self.assertEqual(mapping[i], new_mapping[i])
+                elif i == "a":
+                    self.assertEqual(new_mapping[i], mapping["y"])
                 else:
-                    if i == "a":
-                        self.assertEqual(new_mapping[i], mapping["y"])
-                    else:
-                        self.assertEqual(new_mapping[i], mapping["a"])
+                    self.assertEqual(new_mapping[i], mapping["a"])
         else:
             self.skipTest("No controller connected")
 
@@ -173,8 +166,7 @@ class ControllerInteractiveTest(unittest.TestCase):
 
         joystick_num = controller.get_count()
         ans = question(
-            "get_count() thinks there are {} joysticks "
-            "connected. Is that correct?".format(joystick_num)
+            f"get_count() thinks there are {joystick_num} joysticks connected. Is that correct?"
         )
 
         self.assertTrue(ans)

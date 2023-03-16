@@ -30,12 +30,7 @@ def find_symbols(dll):
 
     it = iter(lines)
 
-    found = False
-    for line in it:
-        if 'name' in line:
-            found = True
-            break
-
+    found = any('name' in line for line in it)
     if not found:
         raise DumpbinParseError
 

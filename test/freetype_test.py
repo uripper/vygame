@@ -10,7 +10,7 @@ import gc
 import pathlib
 import platform
 
-IS_PYPY = "PyPy" == platform.python_implementation()
+IS_PYPY = platform.python_implementation() == "PyPy"
 
 
 try:
@@ -922,15 +922,13 @@ class FreeTypeFontTest(unittest.TestCase):
                 self.assertEqual(
                     surf.get_at(bottomleft),
                     fill_color,
-                    "Position: {}. Depth: {}."
-                    " fg_color: {}.".format(bottomleft, surf.get_bitsize(), fg_color),
+                    f"Position: {bottomleft}. Depth: {surf.get_bitsize()}. fg_color: {fg_color}.",
                 )
                 bottomright = rrect.width - 1, rrect.height - 1
                 self.assertEqual(
                     surf.get_at(bottomright),
                     r_fg_color,
-                    "Position: {}. Depth: {}."
-                    " fg_color: {}.".format(bottomright, surf.get_bitsize(), fg_color),
+                    f"Position: {bottomright}. Depth: {surf.get_bitsize()}. fg_color: {fg_color}.",
                 )
             for i, surf in enumerate(surfaces):
                 surf.fill(fill_color)
@@ -1673,7 +1671,7 @@ class FreeTypeFontTest(unittest.TestCase):
         self.assertEqual(font_name_2, font_name)
 
         # Check generator:
-        names = (name for name in fonts)
+        names = iter(fonts)
         font_name_2 = ft.SysFont(names, size).name
         self.assertEqual(font_name_2, font_name)
 
