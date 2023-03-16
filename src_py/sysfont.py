@@ -157,16 +157,15 @@ def _font_finder_darwin():
         "/System/Library/Fonts/Supplemental",
     ]
 
-    username = os.getenv("USER")
-    if username:
+    if username := os.getenv("USER"):
         locations.append(f"/Users/{username}/Library/Fonts")
 
     strange_root = "/System/Library/Assets/com_apple_MobileAsset_Font3"
     if exists(strange_root):
         strange_locations = os.listdir(strange_root)
-        for loc in strange_locations:
-            locations.append(f"{strange_root}/{loc}/AssetData")
-
+        locations.extend(
+            f"{strange_root}/{loc}/AssetData" for loc in strange_locations
+        )
     fonts = {}
 
     for location in locations:
@@ -187,16 +186,12 @@ def initsysfonts_darwin():
     # if the X11 binary exists... try and use that.
     #  Not likely to be there on pre 10.4.x ... or MacOS 10.10+
     if exists("/usr/X11/bin/fc-list"):
-        fonts = initsysfonts_unix("/usr/X11/bin/fc-list")
-    # This fc-list path will work with the X11 from the OS X 10.3 installation
-    # disc
+        return initsysfonts_unix("/usr/X11/bin/fc-list")
     elif exists("/usr/X11R6/bin/fc-list"):
-        fonts = initsysfonts_unix("/usr/X11R6/bin/fc-list")
+        return initsysfonts_unix("/usr/X11R6/bin/fc-list")
     else:
         # eventually this should probably be the preferred solution
-        fonts = _font_finder_darwin()
-
-    return fonts
+        return _font_finder_darwin()
 
 
 # read the fonts on unix
@@ -424,10 +419,9 @@ def SysFont(name, size, bold=False, italic=False, constructor=None):
                 single_name = single_name.decode()
 
             single_name = _simplename(single_name)
-            styles = Sysfonts.get(single_name)
-            if not styles:
-                styles = Sysalias.get(single_name)
-            if styles:
+            if styles := Sysfonts.get(single_name) or Sysalias.get(
+                single_name
+            ):
                 plainname = styles.get((False, False))
                 fontname = styles.get((bold, italic))
                 if not (fontname or plainname):
@@ -495,10 +489,7 @@ def match_font(name, bold=False, italic=False):
             single_name = single_name.decode()
 
         single_name = _simplename(single_name)
-        styles = Sysfonts.get(single_name)
-        if not styles:
-            styles = Sysalias.get(single_name)
-        if styles:
+        if styles := Sysfonts.get(single_name) or Sysalias.get(single_name):
             while not fontname:
                 fontname = styles.get((bold, italic))
                 if italic:

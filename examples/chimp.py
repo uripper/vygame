@@ -39,6 +39,7 @@ def load_image(name, colorkey=None, scale=1):
 
 
 def load_sound(name):
+
     class NoneSound:
         def play(self):
             pass
@@ -47,9 +48,7 @@ def load_sound(name):
         return NoneSound()
 
     fullname = os.path.join(data_dir, name)
-    sound = pg.mixer.Sound(fullname)
-
-    return sound
+    return pg.mixer.Sound(fullname)
 
 
 # classes for our game objects
@@ -105,11 +104,12 @@ class Chimp(pg.sprite.Sprite):
     def _walk(self):
         """move the monkey across the screen, and turn at the ends"""
         newpos = self.rect.move((self.move, 0))
-        if not self.area.contains(newpos):
-            if self.rect.left < self.area.left or self.rect.right > self.area.right:
-                self.move = -self.move
-                newpos = self.rect.move((self.move, 0))
-                self.image = pg.transform.flip(self.image, True, False)
+        if not self.area.contains(newpos) and (
+            self.rect.left < self.area.left or self.rect.right > self.area.right
+        ):
+            self.move = -self.move
+            newpos = self.rect.move((self.move, 0))
+            self.image = pg.transform.flip(self.image, True, False)
         self.rect = newpos
 
     def _spin(self):

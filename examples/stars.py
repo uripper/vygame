@@ -31,7 +31,7 @@ def init_star():
 def initialize_stars():
     "creates a new starfield"
     stars = []
-    for x in range(NUMSTARS):
+    for _ in range(NUMSTARS):
         star = init_star()
         vel, pos = star
         steps = random.randint(0, WINCENTER[0])

@@ -101,9 +101,8 @@ class VideoCapturePlayer:
             for e in events:
                 if e.type == pg.QUIT or (e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE):
                     going = False
-                if e.type == pg.KEYDOWN:
-                    if e.key in range(pg.K_0, pg.K_0 + 10):
-                        camera = self.init_cams(e.key - pg.K_0)
+                if e.type == pg.KEYDOWN and e.key in range(pg.K_0, pg.K_0 + 10):
+                    camera = self.init_cams(e.key - pg.K_0)
 
             self.get_and_flip()
             self.clock.tick()

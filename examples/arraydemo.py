@@ -34,7 +34,7 @@ def surfdemo_show(array_img, name):
         if e.type == pg.MOUSEBUTTONUP and e.button == pg.BUTTON_LEFT:
             break
         elif e.type == pg.KEYDOWN and e.key == pg.K_s:
-            pg.image.save(screen, name + ".png")
+            pg.image.save(screen, f"{name}.png")
         elif e.type == pg.QUIT:
             pg.quit()
             raise SystemExit()

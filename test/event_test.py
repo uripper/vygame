@@ -30,7 +30,7 @@ EVENT_TEST_PARAMS.update(
     {
         pygame.KEYDOWN: {"key": pygame.K_SPACE},
         pygame.KEYUP: {"key": pygame.K_SPACE},
-        pygame.MOUSEMOTION: dict(),
+        pygame.MOUSEMOTION: {},
         pygame.MOUSEBUTTONDOWN: dict(button=1),
         pygame.MOUSEBUTTONUP: dict(button=1),
     }
@@ -299,7 +299,7 @@ class EventModuleTest(unittest.TestCase):
                     + str(got)
                 )
         if len(items_left) > 0:
-            raise AssertionError("Unexpected Events: " + str(items_left))
+            raise AssertionError(f"Unexpected Events: {str(items_left)}")
 
     def setUp(self):
         pygame.display.init()

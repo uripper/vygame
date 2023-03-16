@@ -15,7 +15,7 @@ def intensity(c, i):
     unaltered color.
 
     """
-    r, g, b = c[0:3]
+    r, g, b = c[:3]
     if 0 <= i <= 127:
         # Darken
         return ((r * i) // 127, (g * i) // 127, (b * i) // 127)
@@ -33,11 +33,11 @@ class GfxdrawDefaultTest(unittest.TestCase):
     foreground_color = (128, 64, 8)
     background_color = (255, 255, 255)
 
-    def make_palette(base_color):
+    def make_palette(self):
         """Return color palette that is various intensities of base_color"""
         # Need this function for Python 3.x so the base_color
         # is within the scope of the list comprehension.
-        return [intensity(base_color, i) for i in range(0, 256)]
+        return [intensity(self, i) for i in range(256)]
 
     default_palette = make_palette(foreground_color)
 
@@ -83,16 +83,16 @@ class GfxdrawDefaultTest(unittest.TestCase):
         if not pygame.get_init():
             pygame.init()
 
-        Surface = pygame.Surface
         size = self.default_size
-        palette = self.default_palette
         if not self.is_started:
+            Surface = pygame.Surface
             # Create test surfaces
             self.surfaces = [
                 Surface(size, 0, 8),
                 Surface(size, SRCALPHA, 16),
                 Surface(size, SRCALPHA, 32),
             ]
+            palette = self.default_palette
             self.surfaces[0].set_palette(palette)
             nonpalette_fmts = (
                 # (8, (0xe0, 0x1c, 0x3, 0x0)),
@@ -120,8 +120,10 @@ class GfxdrawDefaultTest(unittest.TestCase):
                 (32, (0xFF, 0xFF00, 0xFF0000, 0xFF000000)),
                 (32, (0xFF00, 0xFF0000, 0xFF000000, 0xFF)),
             )
-            for bitsize, masks in nonpalette_fmts:
-                self.surfaces.append(Surface(size, 0, bitsize, masks))
+            self.surfaces.extend(
+                Surface(size, 0, bitsize, masks)
+                for bitsize, masks in nonpalette_fmts
+            )
         for surf in self.surfaces:
             surf.fill(self.background_color)
 

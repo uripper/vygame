@@ -18,7 +18,7 @@ class MixerMusicModuleTest(unittest.TestCase):
     def tearDownClass(cls):
         pygame.mixer.quit()
 
-    def setUp(cls):
+    def setUp(self):
         # This makes sure the mixer is always initialized before each test (in
         # case a test calls pygame.mixer.quit()).
         if pygame.mixer.get_init() is None:
@@ -384,7 +384,7 @@ class MixerMusicModuleTest(unittest.TestCase):
         testfile = example_path(os.path.join("data", "house_lo.wav"))
         tempcopy = os.path.join(tempfile.gettempdir(), "tempfile.wav")
 
-        for i in range(10):
+        for _ in range(10):
             pygame.mixer.init()
             try:
                 shutil.copy2(testfile, tempcopy)

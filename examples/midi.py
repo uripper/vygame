@@ -168,11 +168,7 @@ def output_main(device_id=None):
 
     _print_device_info()
 
-    if device_id is None:
-        port = pygame.midi.get_default_output_id()
-    else:
-        port = device_id
-
+    port = pygame.midi.get_default_output_id() if device_id is None else device_id
     print(f"using output_id :{port}:")
 
     midi_out = pygame.midi.Output(port, 0)
@@ -247,10 +243,7 @@ def output_main(device_id=None):
 
 def make_key_mapping(keys, start_note):
     """Return a dictionary of (note, velocity) by computer keyboard key code"""
-    mapping = {}
-    for i, key in enumerate(keys):
-        mapping[key] = (start_note + i, 127)
-    return mapping
+    return {key: (start_note + i, 127) for i, key in enumerate(keys)}
 
 
 class NullKey:
@@ -338,10 +331,7 @@ def key_class(updates, image_strip, image_rects, is_white_key=True):
     # the left by calling the adjacent key's _right_black_down or
     # _right_white_down method.
     #
-    if is_white_key:
-        key_color = "white"
-    else:
-        key_color = "black"
+    key_color = "white" if is_white_key else "black"
     c_notify_down_method = f"_right_{key_color}_down"
     c_notify_up_method = f"_right_{key_color}_up"
 
@@ -609,11 +599,12 @@ def key_images():
         "white-right self",
         "white-right self-white",
     ]
-    rects = {}
-    for i in range(2):
-        rects[names[i]] = pg.Rect(
+    rects = {
+        names[i]: pg.Rect(
             i * white_key_width, 0, black_key_width, black_key_height
         )
+        for i in range(2)
+    }
     for i in range(2, len(names)):
         rects[names[i]] = pg.Rect(
             i * white_key_width, 0, white_key_width, white_key_height
@@ -723,15 +714,15 @@ class Keyboard:
             ident = note  # For now notes uniquely identify keyboard keys.
             if is_white_key(note):
                 if is_prev_white:
-                    if note == end_note or is_white_key(note + 1):
-                        key = self.WhiteKey(ident, (x, y), prev_white_key)
-                    else:
-                        key = self.WhiteKeyLeft(ident, (x, y), prev_white_key)
+                    key = (
+                        self.WhiteKey(ident, (x, y), prev_white_key)
+                        if note == end_note or is_white_key(note + 1)
+                        else self.WhiteKeyLeft(ident, (x, y), prev_white_key)
+                    )
+                elif note == end_note or is_white_key(note + 1):
+                    key = self.WhiteKeyRight(ident, (x, y), prev_white_key)
                 else:
-                    if note == end_note or is_white_key(note + 1):
-                        key = self.WhiteKeyRight(ident, (x, y), prev_white_key)
-                    else:
-                        key = self.WhiteKeyCenter(ident, (x, y), prev_white_key)
+                    key = self.WhiteKeyCenter(ident, (x, y), prev_white_key)
                 is_prev_white = True
                 x += self.white_key_width
                 prev_white_key = key

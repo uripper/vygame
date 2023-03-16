@@ -297,7 +297,7 @@ def toc_ref(fullname, refid):
 
 
 def decorate_signatures(desc, classname):
-    prefix = classname + "."
+    prefix = f"{classname}."
     for child in desc.children:
         if isinstance(child, desc_signature) and isinstance(child[0], desc_name):
             new_desc_classname = desc_classname("", prefix)
@@ -348,7 +348,7 @@ def inject_template_globals(app, pagename, templatename, context, doctree):
         "sndarray",
         "surfarray",
     ]
-    existing_order = ["pygame." + x for x in existing_order]
+    existing_order = [f"pygame.{x}" for x in existing_order]
 
     def sort_by_order(sequence, existing_order):
         return existing_order + [x for x in sequence if x not in existing_order]

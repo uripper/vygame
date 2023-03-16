@@ -220,9 +220,8 @@ class DisplayModuleTest(unittest.TestCase):
 
         # We create a list where we store the original values of the
         # flags before setting them with a different value.
-        original_values = []
+        original_values = [pygame.display.gl_get_attribute(pygame.GL_ALPHA_SIZE)]
 
-        original_values.append(pygame.display.gl_get_attribute(pygame.GL_ALPHA_SIZE))
         original_values.append(pygame.display.gl_get_attribute(pygame.GL_DEPTH_SIZE))
         original_values.append(pygame.display.gl_get_attribute(pygame.GL_STENCIL_SIZE))
         original_values.append(
@@ -290,9 +289,8 @@ class DisplayModuleTest(unittest.TestCase):
         set_values = [8, 24, 8, 16, 16, 16, 16, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0]
 
         # We create a list where we store the values after getting them
-        get_values = []
+        get_values = [pygame.display.gl_get_attribute(pygame.GL_ALPHA_SIZE)]
 
-        get_values.append(pygame.display.gl_get_attribute(pygame.GL_ALPHA_SIZE))
         get_values.append(pygame.display.gl_get_attribute(pygame.GL_DEPTH_SIZE))
         get_values.append(pygame.display.gl_get_attribute(pygame.GL_STENCIL_SIZE))
         get_values.append(pygame.display.gl_get_attribute(pygame.GL_ACCUM_RED_SIZE))
@@ -323,10 +321,7 @@ class DisplayModuleTest(unittest.TestCase):
         # We check to see if the values that we get correspond to the values that we set
         # them to or to the original values.
         for i in range(len(original_values)):
-            self.assertTrue(
-                (get_values[i] == original_values[i])
-                or (get_values[i] == set_values[i])
-            )
+            self.assertTrue(get_values[i] in [original_values[i], set_values[i]])
 
         # test using non-flag argument
         with self.assertRaises(TypeError):
@@ -377,9 +372,8 @@ class DisplayModuleTest(unittest.TestCase):
         pygame.display.gl_set_attribute(pygame.GL_STEREO, set_values[9])
 
         # We create a list where we store the values after getting them
-        get_values = []
+        get_values = [pygame.display.gl_get_attribute(pygame.GL_ALPHA_SIZE)]
 
-        get_values.append(pygame.display.gl_get_attribute(pygame.GL_ALPHA_SIZE))
         get_values.append(pygame.display.gl_get_attribute(pygame.GL_DEPTH_SIZE))
         get_values.append(pygame.display.gl_get_attribute(pygame.GL_STENCIL_SIZE))
         get_values.append(pygame.display.gl_get_attribute(pygame.GL_ACCUM_RED_SIZE))
@@ -408,18 +402,19 @@ class DisplayModuleTest(unittest.TestCase):
 
         self.assertEqual(pygame.display.get_active(), True)
 
-        success = pygame.display.iconify()
-
-        if success:
+        if success := pygame.display.iconify():
             active_event = window_minimized_event = False
             # make sure we cycle the event loop enough to get the display
             # hidden. Test that both ACTIVEEVENT and WINDOWMINIMISED event appears
             for _ in range(50):
                 time.sleep(0.01)
                 for event in pygame.event.get():
-                    if event.type == pygame.ACTIVEEVENT:
-                        if not event.gain and event.state == pygame.APPACTIVE:
-                            active_event = True
+                    if (
+                        event.type == pygame.ACTIVEEVENT
+                        and not event.gain
+                        and event.state == pygame.APPACTIVE
+                    ):
+                        active_event = True
                     if event.type == pygame.WINDOWMINIMIZED:
                         window_minimized_event = True
 
@@ -736,14 +731,14 @@ class DisplayUpdateTest(unittest.TestCase):
         self.screen.fill("green")
         pygame.display.update(None)
         pygame.event.pump()  # so mac updates
-        self.question(f"Is the screen black and NOT green?")
+        self.question("Is the screen black and NOT green?")
 
     def test_update_no_args(self):
         """does NOT update the display."""
         self.screen.fill("green")
         pygame.display.update()
         pygame.event.pump()  # so mac updates
-        self.question(f"Is the WHOLE screen green?")
+        self.question("Is the WHOLE screen green?")
 
     def test_update_args(self):
         """updates the display using the args as a rect."""
@@ -807,9 +802,9 @@ class DisplayInteractiveTest(unittest.TestCase):
         screen = pygame.display.set_mode((400, 100))
         screen.fill((100, 100, 100))
 
-        blue_ramp = [x * 256 for x in range(0, 256)]
+        blue_ramp = [x * 256 for x in range(256)]
         blue_ramp[100] = 150 * 256  # Can't tint too far or gamma ramps fail
-        normal_ramp = [x * 256 for x in range(0, 256)]
+        normal_ramp = [x * 256 for x in range(256)]
         # test to see if this platform supports gamma ramps
         gamma_success = False
         if pygame.display.set_gamma_ramp(normal_ramp, normal_ramp, blue_ramp):

@@ -23,10 +23,10 @@ def test_magic(f, magic_hexes):
     data = f.read(len(magic_hexes))
     if len(data) != len(magic_hexes):
         return 0
-    for i, magic_hex in enumerate(magic_hexes):
-        if magic_hex != data[i]:
-            return 0
-    return 1
+    return next(
+        (0 for i, magic_hex in enumerate(magic_hexes) if magic_hex != data[i]),
+        1,
+    )
 
 
 class ImageModuleTest(unittest.TestCase):
@@ -301,15 +301,14 @@ class ImageModuleTest(unittest.TestCase):
     def test_save(self):
         s = pygame.Surface((10, 10))
         s.fill((23, 23, 23))
-        magic_hex = {}
-        magic_hex["jpg"] = [0xFF, 0xD8, 0xFF, 0xE0]
-        magic_hex["png"] = [0x89, 0x50, 0x4E, 0x47]
-        # magic_hex['tga'] = [0x0, 0x0, 0xa]
-        magic_hex["bmp"] = [0x42, 0x4D]
-
+        magic_hex = {
+            "jpg": [0xFF, 0xD8, 0xFF, 0xE0],
+            "png": [0x89, 0x50, 0x4E, 0x47],
+            "bmp": [0x42, 0x4D],
+        }
         formats = ["jpg", "png", "bmp"]
         # uppercase too... JPG
-        formats = formats + [x.upper() for x in formats]
+        formats += [x.upper() for x in formats]
 
         for fmt in formats:
             try:
@@ -375,14 +374,14 @@ class ImageModuleTest(unittest.TestCase):
     def test_save__to_fileobject_w_namehint_argument(self):
         s = pygame.Surface((10, 10))
         s.fill((23, 23, 23))
-        magic_hex = {}
-        magic_hex["jpg"] = [0xFF, 0xD8, 0xFF, 0xE0]
-        magic_hex["png"] = [0x89, 0x50, 0x4E, 0x47]
-        magic_hex["bmp"] = [0x42, 0x4D]
-
+        magic_hex = {
+            "jpg": [0xFF, 0xD8, 0xFF, 0xE0],
+            "png": [0x89, 0x50, 0x4E, 0x47],
+            "bmp": [0x42, 0x4D],
+        }
         formats = ["tga", "jpg", "bmp", "png"]
         # uppercase too... JPG
-        formats = formats + [x.upper() for x in formats]
+        formats += [x.upper() for x in formats]
 
         SDL_Im_version = pygame.image.get_sdl_image_version()
         # We assume here that minor version and patch level of SDL_Image
@@ -472,8 +471,8 @@ class ImageModuleTest(unittest.TestCase):
 
     def assertPremultipliedAreEqual(self, string1, string2, source_string):
         self.assertEqual(len(string1), len(string2))
-        block_size = 20
         if string1 != string2:
+            block_size = 20
             for block_start in range(0, len(string1), block_size):
                 block_end = min(block_start + block_size, len(string1))
                 block1 = string1[block_start:block_end]
@@ -1105,9 +1104,7 @@ class ImageModuleTest(unittest.TestCase):
 
     def test_get_extended(self):
         # Create a png file and try to load it. If it cannot, get_extended() should return False
-        raw_image = []
-        raw_image.append((200, 200, 200, 255, 100, 100, 100, 255))
-
+        raw_image = [(200, 200, 200, 255, 100, 100, 100, 255)]
         f_descriptor, f_path = tempfile.mkstemp(suffix=".png")
 
         with os.fdopen(f_descriptor, "wb") as file:
@@ -1194,12 +1191,8 @@ class ImageModuleTest(unittest.TestCase):
                 # endian platforms
                 continue
 
-            with self.subTest(
-                f'Test loading a {filename.split(".")[-1]}',
-                filename="examples/data/" + filename,
-                expected_color=expected_color,
-            ):
-                surf = pygame.image.load_extended(example_path("data/" + filename))
+            with self.subTest(f'Test loading a {filename.split(".")[-1]}', filename=f"examples/data/{filename}", expected_color=expected_color):
+                surf = pygame.image.load_extended(example_path(f"data/{filename}"))
                 self.assertEqual(surf.get_at((0, 0)), expected_color)
 
     def test_load_pathlib(self):
@@ -1215,10 +1208,7 @@ class ImageModuleTest(unittest.TestCase):
         passing_formats = ["jpg", "png"]
         passing_formats += [fmt.upper() for fmt in passing_formats]
 
-        magic_hex = {}
-        magic_hex["jpg"] = [0xFF, 0xD8, 0xFF, 0xE0]
-        magic_hex["png"] = [0x89, 0x50, 0x4E, 0x47]
-
+        magic_hex = {"jpg": [0xFF, 0xD8, 0xFF, 0xE0], "png": [0x89, 0x50, 0x4E, 0x47]}
         failing_formats = ["bmp", "tga"]
         failing_formats += [fmt.upper() for fmt in failing_formats]
 
@@ -1245,7 +1235,7 @@ class ImageModuleTest(unittest.TestCase):
     def threads_load(self, images):
         import pygame.threads
 
-        for i in range(10):
+        for _ in range(10):
             surfs = pygame.threads.tmap(pygame.image.load, images)
             for s in surfs:
                 self.assertIsInstance(s, pygame.Surface)

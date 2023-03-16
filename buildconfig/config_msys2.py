@@ -27,7 +27,7 @@ def as_machine_type(size):
         return "x86"
     if size == 64:
         return "x64"
-    raise ValueError("Unknown pointer size {}".format(size))
+    raise ValueError(f"Unknown pointer size {size}")
 
 def get_machine_type():
     return as_machine_type(get_ptr_size())
@@ -76,8 +76,10 @@ class Dependency:
             found = glob(p)
             found.sort() or found.reverse()  #reverse sort
             for f in found:
-                if f[:5] == '..'+os.sep+'..' and \
-                   os.path.abspath(f)[:len(parent)] == parent:
+                if (
+                    f[:5] == f'..{os.sep}..'
+                    and os.path.abspath(f)[: len(parent)] == parent
+                ):
                     continue
                 if os.path.isdir(f):
                     self.paths.append(f)
@@ -149,12 +151,10 @@ class Dependency:
             lib_info = self.findhunt(path, Dependency.lib_hunt, lib_match=lib_match)
             if not inc_info or not lib_info:
                 if inc_info:
-                    self.prune_info.append('...Found include dir but no library dir in %s.' % (
-                          path))
+                    self.prune_info.append(f'...Found include dir but no library dir in {path}.')
                     self.fallback_inc = inc_info
                 if lib_info:
-                    self.prune_info.append('...Found library dir but no include dir in %s.' % (
-                          path))
+                    self.prune_info.append(f'...Found library dir but no include dir in {path}.')
                     self.fallback_lib = lib_info
                 prune.append(path)
             else:
@@ -222,7 +222,7 @@ class DependencyDLL(Dependency):
     def __init__(self, dll_regex, lib=None, wildcards=None, libs=None, link=None):
         if lib is None:
             lib = link.libs[0]
-        Dependency.__init__(self, 'COPYLIB_' + lib, wildcards, libs)
+        Dependency.__init__(self, f'COPYLIB_{lib}', wildcards, libs)
         self.lib_name = lib
         self.test = re.compile(dll_regex, re.I).match
         self.lib_dir = '_'
@@ -249,10 +249,7 @@ class DependencyDLL(Dependency):
                 print('Too bad that is a requirement! Hand-fix the "Setup"')
 
     def check_roots(self):
-        for p in self.huntpaths:
-            if self.hunt_dll(self.lib_hunt, p):
-                return True
-        return False
+        return any(self.hunt_dll(self.lib_hunt, p) for p in self.huntpaths)
 
     def hunt_dll(self, search_paths, root):
         for dir in search_paths:
@@ -318,7 +315,7 @@ class DependencyGroup:
     def add_dll(self, dll_regex, lib=None, wildcards=None, libs=None, link_lib=None):
         link = None
         if link_lib is not None:
-            name = 'COPYLIB_' + link_lib
+            name = f'COPYLIB_{link_lib}'
             for d in self.dlls:
                 if d.name == name:
                     link = d
@@ -479,11 +476,7 @@ def main(auto_config=False):
     except ImportError:
         import download_msys2_prebuilt
 
-    download_kwargs = {
-        'x86': False,
-        'x64': False,
-    }
-    download_kwargs[machine_type] = True
+    download_kwargs = {'x86': False, 'x64': False, machine_type: True}
     if download_prebuilt:
         download_msys2_prebuilt.update(**download_kwargs)
 

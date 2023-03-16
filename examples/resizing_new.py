@@ -28,7 +28,7 @@ while not done:
         if event.type == pg.VIDEORESIZE:
             screen = pg.display.get_surface()
     i += 1
-    i = i % screen.get_width()
+    i %= screen.get_width()
     j += i % 2
     j = j % screen.get_height()
 

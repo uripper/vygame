@@ -12,10 +12,9 @@ c_header_dir = os.path.join('src_c', 'doc')
 
 
 def run():
-    full_generation_flag = False
-    for argument in sys.argv[1:]:
-        if argument == 'full_generation':
-            full_generation_flag = True
+    full_generation_flag = any(
+        argument == 'full_generation' for argument in sys.argv[1:]
+    )
     try:
         subprocess_args = [sys.executable, '-m', 'sphinx',
                            '-b', 'html',

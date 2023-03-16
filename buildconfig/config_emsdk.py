@@ -1,5 +1,6 @@
 """Config on Emscripten SDK is almost like Unix"""
 
+
 import logging
 import os
 import sys
@@ -11,7 +12,7 @@ configcommand = os.environ.get(
     "SDL_CONFIG",
     "sdl2-config",
 )
-configcommand = configcommand + " --version --cflags --libs"
+configcommand = f"{configcommand} --version --cflags --libs"
 localbase = os.environ.get("LOCALBASE", "")
 if os.environ.get("PYGAME_EXTRA_BASE"):
     extrabases = os.environ["PYGAME_EXTRA_BASE"].split(":")
@@ -70,10 +71,9 @@ class DependencyProg:
             # does not recognize multiple command line options. So execute
             # 'command' separately for each option.
             config = (
-                os.popen(command + " " + version_flag).readlines()
-                + os.popen(command + " --cflags").readlines()
-                + os.popen(command + " --libs").readlines()
-            )
+                os.popen(f"{command} {version_flag}").readlines()
+                + os.popen(f"{command} --cflags").readlines()
+            ) + os.popen(f"{command} --libs").readlines()
             flags = " ".join(config[1:]).split()
 
             # remove this GNU_SOURCE if there... since python has it already,
@@ -90,18 +90,18 @@ class DependencyProg:
             self.cflags = ""
             for f in flags:
                 if f[:2] in ("-l", "-D", "-I", "-L"):
-                    self.cflags += f + " "
+                    self.cflags += f"{f} "
                 elif f[:3] == "-Wl":
-                    self.cflags += "-Xlinker " + f + " "
+                    self.cflags += f"-Xlinker {f} "
 
             if self.name == "SDL":
                 inc = f"-I{EMSDK}/upstream/emscripten/cache/sysroot/include/SDL2 "
                 inc += f"-I{EMSDK}/upstream/emscripten/cache/sysroot/include/freetype2/freetype "
-                self.cflags = inc + " " + self.cflags
+                self.cflags = f"{inc} {self.cflags}"
 
             if self.name == "FREETYPE":
                 inc = f"-I{EMSDK}/upstream/emscripten/cache/sysroot/include/freetype2/freetype "
-                self.cflags = inc + " " + self.cflags
+                self.cflags = f"{inc} {self.cflags}"
 
         except (ValueError, TypeError):
             print(f'WARNING: "{command}" failed!')
@@ -141,7 +141,7 @@ class Dependency:
         for dir in libdirs:
             for name in libnames:
                 path = os.path.join(dir, name)
-                if any(map(os.path.isfile, glob(path + "*"))):
+                if any(map(os.path.isfile, glob(f"{path}*"))):
                     self.lib_dir = dir
 
         if (incname and self.lib_dir and self.inc_dir) or (
@@ -234,7 +234,9 @@ def main(auto_config=False):
     incdirs += [os.environ.get("PREFIX", "") + d for d in origincdirs]
     libdirs += [os.environ.get("PREFIX", "") + d for d in origlibdirs]
 
-    incdirs += [EMSDK + "/upstream/emscripten/cache/sysroot" + d for d in origincdirs]
+    incdirs += [
+        f"{EMSDK}/upstream/emscripten/cache/sysroot{d}" for d in origincdirs
+    ]
 
     for extrabase in extrabases:
         incdirs += [extrabase + d for d in origincdirs]

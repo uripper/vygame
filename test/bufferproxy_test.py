@@ -406,7 +406,7 @@ class BufferProxyTest(unittest.TestCase):
         segcount, buflen = get_segcount(bf)
         self.assertEqual(segcount, 3 * 4)
         self.assertEqual(buflen, 3 * 4 * 4)
-        for i in range(0, 4):
+        for i in range(4):
             seglen, segaddr = get_read_buffer(bf, i)
             self.assertEqual(segaddr, memaddr + i * 4)
             self.assertEqual(seglen, 4)

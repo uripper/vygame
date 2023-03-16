@@ -59,11 +59,7 @@ class Sprite:
         """
         self.surface = surface
         self.width, self.height = self.surface.get_size()
-        if mask is not None:
-            self.mask = mask
-        else:
-            self.mask = pg.mask.from_surface(self.surface)
-
+        self.mask = mask if mask is not None else pg.mask.from_surface(self.surface)
         self.pos = pg.Vector2(pos)
         self.vel = pg.Vector2(vel)
 
@@ -126,7 +122,7 @@ def main(*args):
     off each other. More than one sprite image can be provided.
     """
 
-    if len(args) == 0:
+    if not args:
         raise ValueError("Require at least one image file name: non given")
     pg.init()
 

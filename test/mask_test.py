@@ -10,14 +10,14 @@ from pygame.locals import *
 from pygame.math import Vector2
 
 
-IS_PYPY = "PyPy" == platform.python_implementation()
+IS_PYPY = platform.python_implementation() == "PyPy"
 
 
 def random_mask(size=(100, 100)):
     """random_mask(size=(100,100)): return Mask
     Create a mask of the given size, with roughly half the bits set at random."""
     m = pygame.Mask(size)
-    for i in range(size[0] * size[1] // 2):
+    for _ in range(size[0] * size[1] // 2):
         x, y = random.randint(0, size[0] - 1), random.randint(0, size[1] - 1)
         m.set_at((x, y))
     return m
@@ -25,8 +25,7 @@ def random_mask(size=(100, 100)):
 
 def maskFromSurface(surface, threshold=127):
     mask = pygame.Mask(surface.get_size())
-    key = surface.get_colorkey()
-    if key:
+    if key := surface.get_colorkey():
         for y in range(surface.get_height()):
             for x in range(surface.get_width()):
                 if surface.get_at((x + 0.1, y + 0.1)) != key:
@@ -628,9 +627,9 @@ class MaskTypeTest(unittest.TestCase):
             msg = f"offset={offset}"
             x, y = offset
             expected_y = max(y, 0)
-            if 0 == y:
+            if y == 0:
                 expected_x = max(x + 1, 1)
-            elif 0 < y:
+            elif y > 0:
                 expected_x = max(x + 1, 0)
             else:
                 expected_x = max(x, 1)
@@ -1223,7 +1222,7 @@ class MaskTypeTest(unittest.TestCase):
         expected_size = (side, side)
         mask1 = pygame.mask.Mask(expected_size)
         mask2 = pygame.mask.Mask(expected_size, fill=True)
-        expected_count1 = side * side
+        expected_count1 = side**2
         expected_count2 = 0
 
         for i in range(side):
@@ -2133,13 +2132,10 @@ class MaskTypeTest(unittest.TestCase):
         width, height = 41, 27
         expected_size = (width, height)
         original_mask = pygame.mask.Mask(expected_size)
-        patterns = []  # Patterns and offsets.
-
         # Draw some connected patterns on the original mask.
         offset = (0, 0)
         pattern = self._draw_component_pattern_x(original_mask, 3, offset)
-        patterns.append((pattern, offset))
-
+        patterns = [(pattern, offset)]
         size = 4
         offset = (width - size, 0)
         pattern = self._draw_component_pattern_plus(original_mask, size, offset)
@@ -2460,93 +2456,14 @@ class MaskTypeTest(unittest.TestCase):
         # Create masks with different set point groups. Each group of
         # connected set points will be contained in its own bounding rect.
         # Diagonal points are considered connected.
-        mask_data = []  # [((size), ((rect1_pts), ...)), ...]
-
-        # Mask 1:
-        #  |0123456789
-        # -+----------
-        # 0|1100000000
-        # 1|1000000000
-        # 2|0000000000
-        # 3|1001000000
-        # 4|0000000000
-        # 5|0000000000
-        # 6|0000000000
-        # 7|0000000000
-        # 8|0000000000
-        # 9|0000000000
-        mask_data.append(
+        mask_data = [
+            ((10, 10), (((0, 0), (1, 0), (0, 1)), ((0, 3),), ((3, 3),))),
+            ((4, 2), (((0, 0), (1, 0), (0, 1), (1, 1), (2, 1), (3, 1)),)),
+            ((5, 3), (((2, 0), (1, 1), (2, 1), (3, 1), (2, 2)),)),
+            ((5, 3), (((3, 0), (2, 1), (1, 2)),)),
+            ((5, 2), (((3, 0), (4, 0), (0, 1), (1, 1), (2, 1), (3, 1)),)),
             (
-                (10, 10),  # size
-                # Points to set for the 3 bounding rects.
-                (((0, 0), (1, 0), (0, 1)), ((0, 3),), ((3, 3),)),  # rect1  # rect2
-            )
-        )  # rect3
-
-        # Mask 2:
-        #  |0123
-        # -+----
-        # 0|1100
-        # 1|1111
-        mask_data.append(
-            (
-                (4, 2),  # size
-                # Points to set for the 1 bounding rect.
-                (((0, 0), (1, 0), (0, 1), (1, 1), (2, 1), (3, 1)),),
-            )
-        )
-
-        # Mask 3:
-        #  |01234
-        # -+-----
-        # 0|00100
-        # 1|01110
-        # 2|00100
-        mask_data.append(
-            (
-                (5, 3),  # size
-                # Points to set for the 1 bounding rect.
-                (((2, 0), (1, 1), (2, 1), (3, 1), (2, 2)),),
-            )
-        )
-
-        # Mask 4:
-        #  |01234
-        # -+-----
-        # 0|00010
-        # 1|00100
-        # 2|01000
-        mask_data.append(
-            (
-                (5, 3),  # size
-                # Points to set for the 1 bounding rect.
-                (((3, 0), (2, 1), (1, 2)),),
-            )
-        )
-
-        # Mask 5:
-        #  |01234
-        # -+-----
-        # 0|00011
-        # 1|11111
-        mask_data.append(
-            (
-                (5, 2),  # size
-                # Points to set for the 1 bounding rect.
-                (((3, 0), (4, 0), (0, 1), (1, 1), (2, 1), (3, 1)),),
-            )
-        )
-
-        # Mask 6:
-        #  |01234
-        # -+-----
-        # 0|10001
-        # 1|00100
-        # 2|10001
-        mask_data.append(
-            (
-                (5, 3),  # size
-                # Points to set for the 5 bounding rects.
+                (5, 3),
                 (
                     ((0, 0),),  # rect1
                     ((4, 0),),  # rect2
@@ -2554,8 +2471,8 @@ class MaskTypeTest(unittest.TestCase):
                     ((0, 2),),  # rect4
                     ((4, 2),),
                 ),
-            )
-        )  # rect5
+            ),
+        ]
 
         for size, rect_point_tuples in mask_data:
             rects = []
@@ -2609,11 +2526,7 @@ class MaskTypeTest(unittest.TestCase):
             mask = pygame.mask.Mask(size, fill=fill)
 
             for use_arg in (True, False):
-                if use_arg:
-                    to_surface = mask.to_surface(None)
-                else:
-                    to_surface = mask.to_surface()
-
+                to_surface = mask.to_surface(None) if use_arg else mask.to_surface()
                 self.assertIsInstance(to_surface, pygame.Surface)
                 if not IS_PYPY:
                     self.assertEqual(sys.getrefcount(to_surface), expected_ref_count)
@@ -3382,13 +3295,12 @@ class MaskTypeTest(unittest.TestCase):
                                         expected_color = setcolor
                                     else:
                                         expected_color = default_surface_color
+                                elif unsetsurface_param is not None:
+                                    expected_color = unsetsurface_color
+                                elif unsetcolor_param is not None:
+                                    expected_color = unsetcolor
                                 else:
-                                    if unsetsurface_param is not None:
-                                        expected_color = unsetsurface_color
-                                    elif unsetcolor_param is not None:
-                                        expected_color = unsetcolor
-                                    else:
-                                        expected_color = default_surface_color
+                                    expected_color = default_surface_color
 
                                 to_surface = mask.to_surface(**kwargs)
 

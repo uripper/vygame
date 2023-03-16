@@ -392,8 +392,7 @@ class AbstractGroup:
 
         :param sprite: The sprite we are removing.
         """
-        lost_rect = self.spritedict[sprite]
-        if lost_rect:
+        if lost_rect := self.spritedict[sprite]:
             self.lostsprites.append(lost_rect)
         del self.spritedict[sprite]
 
@@ -518,9 +517,8 @@ class AbstractGroup:
                         for spr in sprite.sprites():
                             if not self.has_internal(spr):
                                 return False
-                    else:
-                        if not self.has_internal(sprite):
-                            return False
+                    elif not self.has_internal(sprite):
+                        return False
 
         return True
 
@@ -538,7 +536,7 @@ class AbstractGroup:
 
     def draw(
         self, surface, bgsurf=None, special_flags=0
-    ):  # noqa pylint: disable=unused-argument; bgsurf arg used in LayeredDirty
+    ):    # noqa pylint: disable=unused-argument; bgsurf arg used in LayeredDirty
         """draw all sprites onto the surface
 
         Group.draw(surface, special_flags=0): return Rect_list
@@ -562,9 +560,7 @@ class AbstractGroup:
                     spr.image, spr.rect, None, special_flags
                 )
         self.lostsprites = []
-        dirty = self.lostsprites
-
-        return dirty
+        return self.lostsprites
 
     def clear(self, surface, bgd):
         """erase the previous position of all sprites
@@ -791,7 +787,7 @@ class LayeredUpdates(AbstractGroup):
 
         if not sprites:
             return
-        layer = kwargs["layer"] if "layer" in kwargs else None
+        layer = kwargs.get("layer")
         for sprite in sprites:
             # It's possible that some sprite is also an iterator.
             # If this is the case, we should add the sprite itself,
@@ -861,12 +857,11 @@ class LayeredUpdates(AbstractGroup):
             newrect = surface_blit(spr.image, spr.rect, None, special_flags)
             if rec is init_rect:
                 dirty_append(newrect)
+            elif newrect.colliderect(rec):
+                dirty_append(newrect.union(rec))
             else:
-                if newrect.colliderect(rec):
-                    dirty_append(newrect.union(rec))
-                else:
-                    dirty_append(newrect)
-                    dirty_append(rec)
+                dirty_append(newrect)
+                dirty_append(rec)
             spritedict[spr] = newrect
         return dirty
 
@@ -1196,11 +1191,7 @@ class LayeredDirty(LayeredUpdates):
         # timing for switching modes
         # How may a good threshold be found? It depends on the hardware.
         end_time = get_ticks()
-        if end_time - start_time > self._time_threshold:
-            self._use_update = False
-        else:
-            self._use_update = True
-
+        self._use_update = end_time - start_time <= self._time_threshold
         # empty dirty rects list
         local_update[:] = []
 
@@ -1400,9 +1391,7 @@ class GroupSingle(AbstractGroup):
         return GroupSingle(self.__sprite)
 
     def sprites(self):
-        if self.__sprite is not None:
-            return [self.__sprite]
-        return []
+        return [self.__sprite] if self.__sprite is not None else []
 
     def add_internal(self, sprite, layer=None):
         if self.__sprite is not None:
@@ -1699,15 +1688,14 @@ def spritecollide(sprite, group, dokill, collided=None):
         append = crashed.append
 
         for group_sprite in group.sprites():
-            if collided is not None:
-                if collided(sprite, group_sprite):
-                    group_sprite.kill()
-                    append(group_sprite)
-            else:
-                if default_sprite_collide_func(group_sprite.rect):
-                    group_sprite.kill()
-                    append(group_sprite)
-
+            if (
+                collided is not None
+                and collided(sprite, group_sprite)
+                or collided is None
+                and default_sprite_collide_func(group_sprite.rect)
+            ):
+                group_sprite.kill()
+                append(group_sprite)
         return crashed
 
     if collided is not None:
@@ -1746,14 +1734,16 @@ def groupcollide(groupa, groupb, dokilla, dokillb, collided=None):
     sprite_collide_func = spritecollide
     if dokilla:
         for group_a_sprite in groupa.sprites():
-            collision = sprite_collide_func(group_a_sprite, groupb, dokillb, collided)
-            if collision:
+            if collision := sprite_collide_func(
+                group_a_sprite, groupb, dokillb, collided
+            ):
                 crashed[group_a_sprite] = collision
                 group_a_sprite.kill()
     else:
         for group_a_sprite in groupa:
-            collision = sprite_collide_func(group_a_sprite, groupb, dokillb, collided)
-            if collision:
+            if collision := sprite_collide_func(
+                group_a_sprite, groupb, dokillb, collided
+            ):
                 crashed[group_a_sprite] = collision
     return crashed
 
@@ -1778,15 +1768,15 @@ def spritecollideany(sprite, group, collided=None):
 
 
     """
-    # pull the default collision function in as a local variable outside
-    # the loop as this makes the loop run faster
-    default_sprite_collide_func = sprite.rect.colliderect
-
     if collided is not None:
         for group_sprite in group:
             if collided(sprite, group_sprite):
                 return group_sprite
     else:
+        # pull the default collision function in as a local variable outside
+        # the loop as this makes the loop run faster
+        default_sprite_collide_func = sprite.rect.colliderect
+
         # Special case old behaviour for speed.
         for group_sprite in group:
             if default_sprite_collide_func(group_sprite.rect):

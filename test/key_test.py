@@ -221,7 +221,7 @@ class KeyModuleTest(unittest.TestCase):
                 self.assertFalse(pygame.key.get_focused())
                 # Test if focus is returned when iconify is gone
                 pygame.display.set_mode(size=display_sizes[-1], flags=pygame.FULLSCREEN)
-                for i in range(50):
+                for _ in range(50):
                     time.sleep(0.01)
                     pygame.event.pump()
                 self.assertTrue(pygame.key.get_focused())
@@ -239,8 +239,7 @@ class KeyModuleTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             next(states)
         with self.assertRaises(TypeError):
-            for k in states:
-                pass
+            pass
 
     def test_name_and_key_code(self):
         for const_name in dir(pygame):

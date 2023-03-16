@@ -9,7 +9,7 @@ from pygame.tests.test_utils import example_path
 import pygame
 from pygame import mixer
 
-IS_PYPY = "PyPy" == platform.python_implementation()
+IS_PYPY = platform.python_implementation() == "PyPy"
 
 ################################### CONSTANTS ##################################
 
@@ -327,10 +327,7 @@ class MixerModuleTest(unittest.TestCase):
         snd = mixer.Sound(buffer=b"\x00\x7f" * 20)
         d = snd.__array_interface__
         self.assertTrue(isinstance(d, dict))
-        if pygame.get_sdl_byteorder() == pygame.LIL_ENDIAN:
-            typestr = "<i2"
-        else:
-            typestr = ">i2"
+        typestr = "<i2" if pygame.get_sdl_byteorder() == pygame.LIL_ENDIAN else ">i2"
         self.assertEqual(d["typestr"], typestr)
         self.assertEqual(d["shape"], (20,))
         self.assertEqual(d["strides"], (2,))
@@ -371,7 +368,7 @@ class MixerModuleTest(unittest.TestCase):
         fsys, frev = ("<", ">") if is_lil_endian else (">", "<")
         shape = (10, channels)[:ndim]
         strides = (channels * itemsize, itemsize)[2 - ndim :]
-        exp = Exporter(shape, format=frev + "i")
+        exp = Exporter(shape, format=f"{frev}i")
         snd = mixer.Sound(array=exp)
         buflen = len(exp) * itemsize * channels
         imp = Importer(snd, buftools.PyBUF_SIMPLE)
@@ -491,7 +488,7 @@ class MixerModuleTest(unittest.TestCase):
 
             # try playing on all channels
             channels = []
-            for channel_id in range(0, num_channels):
+            for channel_id in range(num_channels):
                 channel = mixer.Channel(channel_id)
                 channel.play(sound)
                 channels.append(channel)
@@ -659,7 +656,7 @@ class ChannelTypeTest(unittest.TestCase):
     def tearDownClass(cls):
         mixer.quit()
 
-    def setUp(cls):
+    def setUp(self):
         # This makes sure the mixer is always initialized before each test (in
         # case a test calls pygame.mixer.quit()).
         if mixer.get_init() is None:
@@ -902,7 +899,7 @@ class SoundTypeTest(unittest.TestCase):
     def tearDownClass(cls):
         mixer.quit()
 
-    def setUp(cls):
+    def setUp(self):
         # This makes sure the mixer is always initialized before each test (in
         # case a test calls pygame.mixer.quit()).
         if mixer.get_init() is None:

@@ -73,9 +73,7 @@ def make_echo(sound, samples_per_second, mydebug=True):
     if mydebug:
         print(f"SHAPE2: {myarr.shape}")
 
-    sound2 = pg.sndarray.make_sound(myarr.astype(int16))
-
-    return sound2
+    return pg.sndarray.make_sound(myarr.astype(int16))
 
 
 def slow_down_sound(sound, rate):
@@ -108,11 +106,7 @@ def sound_from_pos(sound, start_pos, samples_per_second=None, inplace=1):
     """
 
     # see if we want to reuse the sound data or not.
-    if inplace:
-        a1 = pg.sndarray.samples(sound)
-    else:
-        a1 = pg.sndarray.array(sound)
-
+    a1 = pg.sndarray.samples(sound) if inplace else pg.sndarray.array(sound)
     # see if samples per second has been given.  If not, query the pg.mixer.
     #   eg. it might be set to 22050
     if samples_per_second is None:
@@ -124,10 +118,7 @@ def sound_from_pos(sound, start_pos, samples_per_second=None, inplace=1):
     # cut the beginning off the sound at the start position.
     a2 = a1[start_pos_in_samples:]
 
-    # make the Sound instance from the array.
-    sound2 = pg.sndarray.make_sound(a2)
-
-    return sound2
+    return pg.sndarray.make_sound(a2)
 
 
 def main():

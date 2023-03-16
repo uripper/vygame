@@ -335,8 +335,8 @@ copyreg.pickle(Color, __color_reduce, __color_constructor)
 # Thanks for supporting pygame. Without support now, there won't be pygame later.
 if "PYGAME_HIDE_SUPPORT_PROMPT" not in os.environ:
     print(
-        "pygame {} (SDL {}.{}.{}, Python {}.{}.{})".format(  # pylint: disable=consider-using-f-string
-            ver, *get_sdl_version() + sys.version_info[0:3]
+        "pygame {} (SDL {}.{}.{}, Python {}.{}.{})".format(
+            ver, *get_sdl_version() + sys.version_info[:3]
         )
     )
     print("Hello from the pygame community. https://www.pygame.org/contribute.html")

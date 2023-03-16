@@ -12,8 +12,8 @@ def install_pacman_package(pkg_name):
                             capture_output=True, text=True)
     if output.returncode != 0:
         logging.error(
-            "Error {} while downloading package {}: \n{}".
-            format(output.returncode, pkg_name, output.stderr))
+            f"Error {output.returncode} while downloading package {pkg_name}: \n{output.stderr}"
+        )
 
     return output.returncode != 0
 

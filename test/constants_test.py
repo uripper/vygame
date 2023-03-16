@@ -148,14 +148,11 @@ def create_overlap_set(constant_names):
         value = getattr(pygame.constants, name)
         overlap_dict.setdefault(value, set()).add(name)
 
-    # Get all entries with more than 1 value.
-    overlaps = set()
-
-    for overlap_names in overlap_dict.values():
-        if len(overlap_names) > 1:
-            overlaps.add(frozenset(overlap_names))
-
-    return overlaps
+    return {
+        frozenset(overlap_names)
+        for overlap_names in overlap_dict.values()
+        if len(overlap_names) > 1
+    }
 
 
 class KConstantsTests(unittest.TestCase):
@@ -228,7 +225,8 @@ class KConstantsTests(unittest.TestCase):
     def test_k__value_overlap(self):
         """Ensures no unexpected K constant values overlap."""
         EXPECTED_OVERLAPS = {
-            frozenset("K_" + n for n in item) for item in K_AND_KSCAN_COMMON_OVERLAPS
+            frozenset(f"K_{n}" for n in item)
+            for item in K_AND_KSCAN_COMMON_OVERLAPS
         }
 
         overlaps = create_overlap_set(self.K_NAMES)
@@ -311,7 +309,7 @@ class KscanConstantsTests(unittest.TestCase):
     def test_kscan__value_overlap(self):
         """Ensures no unexpected KSCAN constant values overlap."""
         EXPECTED_OVERLAPS = {
-            frozenset("KSCAN_" + n for n in item)
+            frozenset(f"KSCAN_{n}" for n in item)
             for item in K_AND_KSCAN_COMMON_OVERLAPS
         }
 

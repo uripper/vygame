@@ -48,12 +48,14 @@ class Game:
                 )
         self.player.draw()
         for event in pg.event.get():
-            if event.type == pg.QUIT:
+            if (
+                event.type != pg.QUIT
+                and event.type == pg.KEYDOWN
+                and event.key == pg.K_ESCAPE
+                or event.type == pg.QUIT
+            ):
                 self.loop = False
-            elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
-                    self.loop = False
-            elif event.type == pg.MOUSEBUTTONUP:
+            elif event.type != pg.KEYDOWN and event.type == pg.MOUSEBUTTONUP:
                 pos = pg.mouse.get_pos()
                 self.player.move(pos)
         pg.display.update()

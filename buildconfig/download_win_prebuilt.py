@@ -29,9 +29,7 @@ def download_sha1_unzip(url, checksum, save_to_directory, unzip=True):
     filename = os.path.split(url)[-1]
     save_to = os.path.join(save_to_directory, filename)
 
-    # skip download?
-    skip_download = os.path.exists(save_to)
-    if skip_download:
+    if skip_download := os.path.exists(save_to):
         with open(save_to, 'rb') as the_file:
             data = the_file.read()
             cont_checksum = hashlib.sha1(data).hexdigest()
@@ -75,25 +73,24 @@ def download_sha1_unzip(url, checksum, save_to_directory, unzip=True):
                 zip_ref.extractall(zip_dir)
 
 def get_urls(x86=True, x64=True):
-    url_sha1 = []
-    url_sha1.extend([
+    url_sha1 = [
         [
-        'https://www.libsdl.org/release/SDL2-devel-2.24.2-VC.zip',
-        '19b1e9f5bcf700a402bb924c0194c96596283c32',
+            'https://www.libsdl.org/release/SDL2-devel-2.24.2-VC.zip',
+            '19b1e9f5bcf700a402bb924c0194c96596283c32',
         ],
         [
-        'https://www.libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.5-VC.zip',
-        '137f86474691f4e12e76e07d58d5920c8d844d5b',
+            'https://www.libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.5-VC.zip',
+            '137f86474691f4e12e76e07d58d5920c8d844d5b',
         ],
         [
-        'https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.20.1/SDL2_ttf-devel-2.20.1-VC.zip',
-        '371606aceba450384428fd2852f73d2f6290b136'
+            'https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.20.1/SDL2_ttf-devel-2.20.1-VC.zip',
+            '371606aceba450384428fd2852f73d2f6290b136',
         ],
         [
-        'https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.6.2/SDL2_mixer-devel-2.6.2-VC.zip',
-        '000e3ea8a50261d46dbd200fb450b93c59ed4482',
+            'https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.6.2/SDL2_mixer-devel-2.6.2-VC.zip',
+            '000e3ea8a50261d46dbd200fb450b93c59ed4482',
         ],
-    ])
+    ]
     if x86:
         url_sha1.append([
          'https://github.com/pygame/pygame/releases/download/2.1.3.dev4/prebuilt-x86-pygame-2.1.4-20220319.zip',
@@ -250,10 +247,7 @@ def update(x86=True, x64=True):
 
 def ask(x86=True, x64=True):
     move_to_dir = "."
-    if x64:
-        dest_str = f"\"{move_to_dir}/prebuilt-x64\""
-    else:
-        dest_str = ""
+    dest_str = f'\"{move_to_dir}/prebuilt-x64\"' if x64 else ""
     if x86:
         if dest_str:
             dest_str = f"{dest_str} and "

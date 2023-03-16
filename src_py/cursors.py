@@ -69,7 +69,7 @@ class Cursor:
         as that Surface when used.
 
         These Surfaces may use other colors than black and white."""
-        if len(args) == 0:
+        if not args:
             self.type = "system"
             self.data = (pygame.SYSTEM_CURSOR_ARROW,)
         elif len(args) == 1 and args[0] in _cursor_id_table:

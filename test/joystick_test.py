@@ -94,7 +94,7 @@ class JoystickModuleTest(unittest.TestCase):
         # test explicit call(s) to joystick.init.
         # Also test that get_count works once init is called
         iterations = 20
-        for i in range(iterations):
+        for _ in range(iterations):
             pygame.joystick.init()
         self.assertEqual(pygame.joystick.get_init(), True)
         self.assertIsNotNone(pygame.joystick.get_count())
